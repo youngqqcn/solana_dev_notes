@@ -423,3 +423,691 @@
     - 第二步：进行SPL Token转移
 
 - 再次查看余额: `spl-token balance GLr5Chj9H5Vv8yMjEZwMjMfZ1Co9Sz75sVfPYDqbbaL5 -C /home/yqq/.config/solana/cli/config.yml`
+
+
+
+## RPC
+> - https://www.solanazh.com/course/2-1
+>
+> - https://www.solanazh.com/course/2-2
+
+- 3种区块`commitment`级别, 在请求查询的时候，对查询的结果有三种状态选择：
+  - `processed`(处理中) : 节点将查询最新的区块。注意，该区块可能被集群跳过。
+    - 前端界面可以使用这个状态，表示交易已经提交
+  - `confirmed`(已确认) : 节点将查询由集群的超多数投票的最新区块。
+    - 一般情况下使用这个状态
+  - `finalized`(最终确认): 节点将查询由超过集群中超多数确认为达到最大封锁期的最新区块，表示集群已将此区块确认为已完成。
+    - 涉及到转账，必须使用这个状态
+
+
+- 常用RPC接口:
+
+  - 获取区块高度
+    ```
+    $ curl https://api.devnet.solana.com -X POST -H "Content-Type: application/json" -s -d '
+        {
+            "jsonrpc":"2.0","id":1,
+            "method":"getBlockHeight"
+        }
+        ' | jq
+    {
+    "jsonrpc": "2.0",
+    "result": 297028601,
+    "id": 1
+    }
+    ```
+
+
+  - 获取最新区块hash
+    ```
+    curl https://api.devnet.solana.com -s -X POST -H "Content-Type: application/json" -d '
+    {
+        "id":1,
+        "jsonrpc":"2.0",
+        "method":"getLatestBlockhash",
+        "params":[
+        {
+            "commitment":"processed"
+        }
+        ]
+    }' | jq
+    {
+        "jsonrpc": "2.0",
+        "result": {
+            "context": {
+            "apiVersion": "1.18.16",
+            "slot": 308784440
+            },
+            "value": {
+            "blockhash": "FnoWSdeD5QnZMbAEaxDVP3knGvqWej7FruDVFwJgSPdf",
+            "lastValidBlockHeight": 297029261
+            }
+        },
+        "id": 1
+    }
+    ```
+
+  - 获取指定区块高度
+  ```
+  curl https://api.devnet.solana.com -s -X POST -H "Content-Type: application/json" -d '
+    {
+        "jsonrpc": "2.0","id":1,
+        "method":"getBlock",
+        "params": [
+            174302734,
+            {
+                "encoding": "jsonParsed",
+                "maxSupportedTransactionVersion":0,
+                "transactionDetails":"full",
+                "rewards":false
+            }
+        ]
+    }' | jq
+    ```
+
+  - 获取指定block的确认状态
+  ```
+  curl https://api.devnet.solana.com -s -X POST -H "Content-Type: application/json" -d '
+    {
+        "jsonrpc": "2.0", "id": 1,
+        "method": "getBlockCommitment",
+        "params":[174302734]
+    }
+    ' | jq
+  ```
+
+  - 批量获取区块
+  ```
+  curl https://api.devnet.solana.com -s -X POST -H "Content-Type: application/json" -d '
+    {
+        "jsonrpc": "2.0", "id": 1,
+        "method": "getBlocks",
+        "params": [
+            174302734, 174302735
+        ]
+    }
+    ' | jq
+  ```
+
+  - 获取账户信息
+  ```
+  curl https://api.devnet.solana.com -s -X POST -H "Content-Type: application/json" -d '
+    {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "getAccountInfo",
+        "params": [
+            "7DxeAgFoxk9Ha3sdciWE4G4hsR9CUjPxsHAxTmuCJrop",
+            {
+                "encoding": "base58",
+                "commitment": "finalized"
+            }
+        ]
+    }
+    ' | jq
+    {
+        "jsonrpc": "2.0",
+        "result": {
+            "context": {
+            "apiVersion": "1.18.16",
+            "slot": 308785669
+            },
+            "value": {
+            "data": [
+                "",
+                "base58"
+            ],
+            "executable": false,
+            "lamports": 6994429840,
+            "owner": "11111111111111111111111111111111",
+            "rentEpoch": 18446744073709551615,
+            "space": 0
+            }
+        },
+        "id": 1
+    }
+  ```
+    - 所有普通账户的owner都是 系统根账号`11111111111111111111111111111111`
+
+
+  - 获取账户余额
+
+  ```
+  curl https://api.devnet.solana.com -s -X POST -H "Content-Type: application/json" -d '
+    {
+        "jsonrpc": "2.0", "id": 1,
+        "method": "getBalance",
+        "params": [
+            "7DxeAgFoxk9Ha3sdciWE4G4hsR9CUjPxsHAxTmuCJrop"
+        ]
+    }
+    ' | jq
+    {
+        "jsonrpc": "2.0",
+        "result": {
+            "context": {
+                "apiVersion": "1.18.16",
+                "slot": 308787571
+            },
+            "value": 6994429840
+        },
+        "id": 1
+    }
+  ```
+    - `6994429840 / 10^9 = 6.994429840 SOL`
+
+
+  - 获取某个合约管理的所有Account
+  ```
+  curl  https://api.devnet.solana.com -s -X POST -H "Content-Type: application/json" -d '
+        {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "getProgramAccounts",
+            "params": [
+            "namesLPneVptA9Z5rqUDD9tMTWEJwofgaYwp8cawRkX",
+            {
+                "encoding": "jsonParsed",
+                "filters": [
+                {
+                    "dataSize": 128
+                }
+                ]
+            }
+            ]
+        }
+    ' | jq
+  ```
+
+  - 查询SPL Token ATA账户信息
+  ```
+  curl  https://api.devnet.solana.com -s -X POST -H "Content-Type: application/json" -d '
+        {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "getTokenAccountsByOwner",
+            "params": [
+            "7DxeAgFoxk9Ha3sdciWE4G4hsR9CUjPxsHAxTmuCJrop",
+            {
+                "mint": "GLr5Chj9H5Vv8yMjEZwMjMfZ1Co9Sz75sVfPYDqbbaL5"
+            },
+            {
+                "encoding": "jsonParsed"
+            }
+            ]
+        }
+    ' | jq
+
+    {
+        "jsonrpc": "2.0",
+        "result": {
+            "context": {
+            "apiVersion": "1.18.16",
+            "slot": 308789145
+            },
+            "value": [
+            {
+                "account": {
+                "data": {
+                    "parsed": {
+                    "info": {
+                        "isNative": false,
+                        "mint": "GLr5Chj9H5Vv8yMjEZwMjMfZ1Co9Sz75sVfPYDqbbaL5",
+                        "owner": "7DxeAgFoxk9Ha3sdciWE4G4hsR9CUjPxsHAxTmuCJrop",
+                        "state": "initialized",
+                        "tokenAmount": {
+                        "amount": "99000000000",
+                        "decimals": 9,
+                        "uiAmount": 99.0,
+                        "uiAmountString": "99"
+                        }
+                    },
+                    "type": "account"
+                    },
+                    "program": "spl-token",
+                    "space": 165
+                },
+                "executable": false,
+                "lamports": 2039280,
+                "owner": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+                "rentEpoch": 18446744073709551615,
+                "space": 165
+                },
+                "pubkey": "FZQ6qrSHTPERXoQC9tp1WESVpzhZjugLMyQaHmg1BHmx"
+            }
+            ]
+        },
+        "id": 1
+    }
+  ```
+
+  - 查询Token Account(ATA)账户的余额
+  ```
+  curl  https://api.devnet.solana.com  -s -X POST -H "Content-Type: application/json" -d '
+        {
+            "jsonrpc": "2.0", "id": 1,
+            "method": "getTokenAccountBalance",
+            "params": [
+                "FZQ6qrSHTPERXoQC9tp1WESVpzhZjugLMyQaHmg1BHmx"
+            ]
+        }
+    ' | jq
+
+    {
+        "jsonrpc": "2.0",
+        "result": {
+            "context": {
+            "apiVersion": "1.18.16",
+            "slot": 308789587
+            },
+            "value": {
+            "amount": "99000000000",
+            "decimals": 9,
+            "uiAmount": 99.0,
+            "uiAmountString": "99"
+            }
+        },
+        "id": 1
+    }
+  ```
+
+
+  - 获取交易手续费
+
+  ```
+  curl https://api.devnet.solana.com -X POST -H "Content-Type: application/json" -d '
+    {
+        "id":1,
+        "jsonrpc":"2.0",
+        "method":"getFeeForMessage",
+        "params":[
+            "AQABAgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQAA",
+            {
+                "commitment":"processed"
+            }
+        ]
+    }
+    '
+  ```
+
+  - 获取交易详细信息
+  ```
+  curl  https://api.devnet.solana.com  -s -X POST -H "Content-Type: application/json" -d '
+        {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "getTransaction",
+            "params": [
+                "4FUtCxJtinHJRDVuodm34fY15mBftbawhXEHD3qrvFKHK7hSiYXa4RrC3XgQBbcAK2H35VRXvuWZuP4eLMWV6b5i",
+                "jsonParsed"
+            ]
+        }
+    ' | jq
+
+    {
+        "jsonrpc": "2.0",
+        "result": {
+            "blockTime": 1719787000,
+            "meta": {
+            "computeUnitsConsumed": 28320,
+            "err": null,
+            "fee": 5000,
+            "innerInstructions": [
+                {
+                "index": 0,
+                "instructions": [
+                    {
+                    "parsed": {
+                        "info": {
+                        "extensionTypes": [
+                            "immutableOwner"
+                        ],
+                        "mint": "GLr5Chj9H5Vv8yMjEZwMjMfZ1Co9Sz75sVfPYDqbbaL5"
+                        },
+                        "type": "getAccountDataSize"
+                    },
+                    "program": "spl-token",
+                    "programId": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+                    "stackHeight": 2
+                    },
+                    {
+                    "parsed": {
+                        "info": {
+                        "lamports": 2039280,
+                        "newAccount": "8gDUi1gMxy95WaMr5Phtmv8HoX52m5vw7t3Tum22n9hi",
+                        "owner": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+                        "source": "7DxeAgFoxk9Ha3sdciWE4G4hsR9CUjPxsHAxTmuCJrop",
+                        "space": 165
+                        },
+                        "type": "createAccount"
+                    },
+                    "program": "system",
+                    "programId": "11111111111111111111111111111111",
+                    "stackHeight": 2
+                    },
+                    {
+                    "parsed": {
+                        "info": {
+                        "account": "8gDUi1gMxy95WaMr5Phtmv8HoX52m5vw7t3Tum22n9hi"
+                        },
+                        "type": "initializeImmutableOwner"
+                    },
+                    "program": "spl-token",
+                    "programId": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+                    "stackHeight": 2
+                    },
+                    {
+                    "parsed": {
+                        "info": {
+                        "account": "8gDUi1gMxy95WaMr5Phtmv8HoX52m5vw7t3Tum22n9hi",
+                        "mint": "GLr5Chj9H5Vv8yMjEZwMjMfZ1Co9Sz75sVfPYDqbbaL5",
+                        "owner": "38jEaxphBTa3NEg4K6nG8Zgs6eVsSsr9AoSZCfax2pH8"
+                        },
+                        "type": "initializeAccount3"
+                    },
+                    "program": "spl-token",
+                    "programId": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+                    "stackHeight": 2
+                    }
+                ]
+                }
+            ],
+            "logMessages": [
+                "Program ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL invoke [1]",
+                "Program log: CreateIdempotent",
+                "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [2]",
+                "Program log: Instruction: GetAccountDataSize",
+                "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 1595 of 21337 compute units",
+                "Program return: TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA pQAAAAAAAAA=",
+                "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success",
+                "Program 11111111111111111111111111111111 invoke [2]",
+                "Program 11111111111111111111111111111111 success",
+                "Program log: Initialize the associated token account",
+                "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [2]",
+                "Program log: Instruction: InitializeImmutableOwner",
+                "Program log: Please upgrade to SPL Token 2022 for immutable owner support",
+                "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 1405 of 14724 compute units",
+                "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success",
+                "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [2]",
+                "Program log: Instruction: InitializeAccount3",
+                "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 4214 of 10840 compute units",
+                "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success",
+                "Program ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL consumed 21998 of 28320 compute units",
+                "Program ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL success",
+                "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [1]",
+                "Program log: Instruction: TransferChecked",
+                "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 6172 of 6322 compute units",
+                "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success",
+                "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+                "Program ComputeBudget111111111111111111111111111111 success"
+            ],
+            "postBalances": [
+                6994429840,
+                2039280,
+                2039280,
+                1,
+                1,
+                934087680,
+                998985000,
+                731913600,
+                1461600
+            ],
+            "postTokenBalances": [
+                {
+                "accountIndex": 1,
+                "mint": "GLr5Chj9H5Vv8yMjEZwMjMfZ1Co9Sz75sVfPYDqbbaL5",
+                "owner": "38jEaxphBTa3NEg4K6nG8Zgs6eVsSsr9AoSZCfax2pH8",
+                "programId": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+                "uiTokenAmount": {
+                    "amount": "1000000000",
+                    "decimals": 9,
+                    "uiAmount": 1.0,
+                    "uiAmountString": "1"
+                }
+                },
+                {
+                "accountIndex": 2,
+                "mint": "GLr5Chj9H5Vv8yMjEZwMjMfZ1Co9Sz75sVfPYDqbbaL5",
+                "owner": "7DxeAgFoxk9Ha3sdciWE4G4hsR9CUjPxsHAxTmuCJrop",
+                "programId": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+                "uiTokenAmount": {
+                    "amount": "99000000000",
+                    "decimals": 9,
+                    "uiAmount": 99.0,
+                    "uiAmountString": "99"
+                }
+                }
+            ],
+            "preBalances": [
+                6996474120,
+                0,
+                2039280,
+                1,
+                1,
+                934087680,
+                998985000,
+                731913600,
+                1461600
+            ],
+            "preTokenBalances": [
+                {
+                "accountIndex": 2,
+                "mint": "GLr5Chj9H5Vv8yMjEZwMjMfZ1Co9Sz75sVfPYDqbbaL5",
+                "owner": "7DxeAgFoxk9Ha3sdciWE4G4hsR9CUjPxsHAxTmuCJrop",
+                "programId": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+                "uiTokenAmount": {
+                    "amount": "100000000000",
+                    "decimals": 9,
+                    "uiAmount": 100.0,
+                    "uiAmountString": "100"
+                }
+                }
+            ],
+            "rewards": [],
+            "status": {
+                "Ok": null
+            }
+            },
+            "slot": 308780317,
+            "transaction": {
+            "message": {
+                "accountKeys": [
+                {
+                    "pubkey": "7DxeAgFoxk9Ha3sdciWE4G4hsR9CUjPxsHAxTmuCJrop",
+                    "signer": true,
+                    "source": "transaction",
+                    "writable": true
+                },
+                {
+                    "pubkey": "8gDUi1gMxy95WaMr5Phtmv8HoX52m5vw7t3Tum22n9hi",
+                    "signer": false,
+                    "source": "transaction",
+                    "writable": true
+                },
+                {
+                    "pubkey": "FZQ6qrSHTPERXoQC9tp1WESVpzhZjugLMyQaHmg1BHmx",
+                    "signer": false,
+                    "source": "transaction",
+                    "writable": true
+                },
+                {
+                    "pubkey": "11111111111111111111111111111111",
+                    "signer": false,
+                    "source": "transaction",
+                    "writable": false
+                },
+                {
+                    "pubkey": "ComputeBudget111111111111111111111111111111",
+                    "signer": false,
+                    "source": "transaction",
+                    "writable": false
+                },
+                {
+                    "pubkey": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+                    "signer": false,
+                    "source": "transaction",
+                    "writable": false
+                },
+                {
+                    "pubkey": "38jEaxphBTa3NEg4K6nG8Zgs6eVsSsr9AoSZCfax2pH8",
+                    "signer": false,
+                    "source": "transaction",
+                    "writable": false
+                },
+                {
+                    "pubkey": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+                    "signer": false,
+                    "source": "transaction",
+                    "writable": false
+                },
+                {
+                    "pubkey": "GLr5Chj9H5Vv8yMjEZwMjMfZ1Co9Sz75sVfPYDqbbaL5",
+                    "signer": false,
+                    "source": "transaction",
+                    "writable": false
+                }
+                ],
+                "instructions": [
+                {
+                    "parsed": {
+                    "info": {
+                        "account": "8gDUi1gMxy95WaMr5Phtmv8HoX52m5vw7t3Tum22n9hi",
+                        "mint": "GLr5Chj9H5Vv8yMjEZwMjMfZ1Co9Sz75sVfPYDqbbaL5",
+                        "source": "7DxeAgFoxk9Ha3sdciWE4G4hsR9CUjPxsHAxTmuCJrop",
+                        "systemProgram": "11111111111111111111111111111111",
+                        "tokenProgram": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+                        "wallet": "38jEaxphBTa3NEg4K6nG8Zgs6eVsSsr9AoSZCfax2pH8"
+                    },
+                    "type": "createIdempotent"
+                    },
+                    "program": "spl-associated-token-account",
+                    "programId": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+                    "stackHeight": null
+                },
+                {
+                    "parsed": {
+                    "info": {
+                        "authority": "7DxeAgFoxk9Ha3sdciWE4G4hsR9CUjPxsHAxTmuCJrop",
+                        "destination": "8gDUi1gMxy95WaMr5Phtmv8HoX52m5vw7t3Tum22n9hi",
+                        "mint": "GLr5Chj9H5Vv8yMjEZwMjMfZ1Co9Sz75sVfPYDqbbaL5",
+                        "source": "FZQ6qrSHTPERXoQC9tp1WESVpzhZjugLMyQaHmg1BHmx",
+                        "tokenAmount": {
+                        "amount": "1000000000",
+                        "decimals": 9,
+                        "uiAmount": 1.0,
+                        "uiAmountString": "1"
+                        }
+                    },
+                    "type": "transferChecked"
+                    },
+                    "program": "spl-token",
+                    "programId": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+                    "stackHeight": null
+                },
+                {
+                    "accounts": [],
+                    "data": "JBudM9",
+                    "programId": "ComputeBudget111111111111111111111111111111",
+                    "stackHeight": null
+                }
+                ],
+                "recentBlockhash": "B8ceGW8TLHfJEqHTBguWdcn5CVUGQy1yKfaBgH2Vg5KS"
+            },
+            "signatures": [
+                "4FUtCxJtinHJRDVuodm34fY15mBftbawhXEHD3qrvFKHK7hSiYXa4RrC3XgQBbcAK2H35VRXvuWZuP4eLMWV6b5i"
+            ]
+            }
+        },
+        "id": 1
+    }
+
+  ```
+
+## Websocket订阅
+
+> https://www.solanazh.com/course/2-3
+
+- Solana主要订阅方法：
+  - `accountSubscribe` : 订阅Account的变化，比如lamports
+  - `logsSubscribe` : 订阅合约交易的日志
+  - `programSubscribe` ： 订阅合约Account的变化
+  - `signatureSubscribe` : 订阅签名状态变化
+  - `slotSubscribe` : 订阅slot的变化
+
+
+- 安装websocket工具: `npm install -g ws wscat`
+
+
+- 订阅Account变化: `accountSubscribe`
+
+    - 建立ws连接: `wscat -c wss://api.devnet.solana.com`
+
+    在另外一个控制台转移token
+    ```
+    $ spl-token transfer --fund-recipient  GLr5Chj9H5Vv8yMjEZwMjMfZ1Co9Sz75sVfPYDqbbaL5 1 38jEaxphBTa3NEg4K6nG8Zgs6eVsSsr9AoSZCfax2pH8 -C /home/yqq/.config/solana/cli/config.yml
+    ```
+
+
+    ```
+    $ wscat -c wss://api.devnet.solana.com
+    Connected (press CTRL+C to quit)
+    > {"jsonrpc":"2.0","id":1,"method":"accountSubscribe","params":["FZQ6qrSHTPERXoQC9tp1WESVpzhZjugLMyQaHmg1BHmx",{"encoding":"jsonParsed","commitment":"finalized"}]}
+    < {"jsonrpc":"2.0","result":16749,"id":1}
+    < {"jsonrpc":"2.0","method":"accountNotification","params":{"result":{"context":{"slot":308791519},"value":{"lamports":2039280,"data":{"program":"spl-token","parsed":{"info":{"isNative":false,"mint":"GLr5Chj9H5Vv8yMjEZwMjMfZ1Co9Sz75sVfPYDqbbaL5","owner":"7DxeAgFoxk9Ha3sdciWE4G4hsR9CUjPxsHAxTmuCJrop","state":"initialized","tokenAmount":{"amount":"97000000000","decimals":9,"uiAmount":97.0,"uiAmountString":"97"}},"type":"account"},"space":165},"owner":"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA","executable":false,"rentEpoch":18446744073709551615,"space":165}},"subscription":16749}}
+    >
+    ```
+
+
+- 订阅日志: `logsSubscribe`
+
+```
+{"jsonrpc":"2.0","id":1,"method":"logsSubscribe","params":[{"mentions":["GLr5Chj9H5Vv8yMjEZwMjMfZ1Co9Sz75sVfPYDqbbaL5"]},{"commitment":"finalized"}]}
+```
+
+在另外一个控制台mint SPL token, 触发日志
+```
+$ spl-token mint GLr5Chj9H5Vv8yMjEZwMjMfZ1Co9Sz75sVfPYDqbbaL5  100 FZQ6qrSHTPERXoQC9tp1WESVpzhZjugLMyQaHmg1BHmx -C /home/yqq/.config/solana/cli/config.yml
+Minting 100 tokens
+  Token: GLr5Chj9H5Vv8yMjEZwMjMfZ1Co9Sz75sVfPYDqbbaL5
+  Recipient: FZQ6qrSHTPERXoQC9tp1WESVpzhZjugLMyQaHmg1BHmx
+
+Signature: orDWbEWTVAfbPVXxa3VBcdTUR41xm38ssGcy4BFFXspK5rmAPQ7F8oSJ5Kk2dYtzoTuZZSWRuPvUVrA6tYiMdWN
+```
+
+
+```
+$ wscat -c wss://api.devnet.solana.com
+Connected (press CTRL+C to quit)
+> {"jsonrpc":"2.0","id":1,"method":"logsSubscribe","params":[{"mentions":["GLr5Chj9H5Vv8yMjEZwMjMf
+< {"jsonrpc":"2.0","error":{"code":-32700,"message":"Parse error"},"id":null}
+> {"jsonrpc":"2.0","id":1,"method":"logsSubscribe","params":[{"mentions":["GLr5Chj9H5Vv8yMjEZwMjMfZ1Co9Sz75sVfPYDqbbaL5"]},{"commitment":"finalized"}]}
+< {"jsonrpc":"2.0","result":17045,"id":1}
+< {"jsonrpc":"2.0","method":"logsNotification","params":{"result":{"context":{"slot":308792678},"value":{"signature":"1111111111111111111111111111111111111111111111111111111111111111","err":null,"logs":["Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [1]","Program log: Instruction: MintToChecked","Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 4498 of 1400000 compute units","Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success","Program ComputeBudget111111111111111111111111111111 invoke [1]","Program ComputeBudget111111111111111111111111111111 success"]}},"subscription":17045}}
+< {"jsonrpc":"2.0","method":"logsNotification","params":{"result":{"context":{"slot":308792678},"value":{"signature":"orDWbEWTVAfbPVXxa3VBcdTUR41xm38ssGcy4BFFXspK5rmAPQ7F8oSJ5Kk2dYtzoTuZZSWRuPvUVrA6tYiMdWN","err":null,"logs":["Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [1]","Program log: Instruction: MintToChecked","Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 4498 of 4648 compute units","Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success","Program ComputeBudget111111111111111111111111111111 invoke [1]","Program ComputeBudget111111111111111111111111111111 success"]}},"subscription":17045}}
+< {"jsonrpc":"2.0","method":"logsNotification","params":{"result":{"context":{"slot":308792680},"value":{"signature":"orDWbEWTVAfbPVXxa3VBcdTUR41xm38ssGcy4BFFXspK5rmAPQ7F8oSJ5Kk2dYtzoTuZZSWRuPvUVrA6tYiMdWN","err":null,"logs":["Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [1]","Program log: Instruction: MintToChecked","Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 4498 of 4648 compute units","Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success","Program ComputeBudget111111111111111111111111111111 invoke [1]","Program ComputeBudget111111111111111111111111111111 success"]}},"subscription":17045}}
+```
+
+
+
+
+- 订阅合约所属于Account事件: `programSubscribe`
+
+    `{"jsonrpc":"2.0","id":1,"method":"programSubscribe","params":["GLr5Chj9H5Vv8yMjEZwMjMfZ1Co9Sz75sVfPYDqbbaL5",{"encoding":"jsonParsed"}]}`
+
+
+- 订阅交易状态: `signatureSubscribe`
+
+    ```
+    {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "signatureSubscribe",
+        "params": [
+                "BfQAbgqQZMfsxFHwh6Hve8yGb843QfZcYtD2j2nN3K1hLHZrQjzdwG9uWgNkGXs4tBNVLE3JAzvNLtwJBt3zDsN",
+                {
+                "commitment": "finalized",
+                "enableReceivedNotification": false
+                }
+            ]
+    }
+    ```
