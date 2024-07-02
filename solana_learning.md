@@ -231,7 +231,7 @@
         }
         ```
 
-  -  `Account`结构
+  -  `Account`结构 (也可以叫 ATA(Associated Token Account))
 
         > 注意和Solana底层数据结构的Account做区分，Solana底层的Account可以称作 Wallet Account 。而
 
@@ -280,7 +280,7 @@
 
   - Mint 和 Account的关系
     - PDA (Program Dervied Address): 程序派生账户
-    - Associated Token Account: 即 SPL Token的 Account, 见上面的`Account`的结构体
+    - ATA(Associated Token Account): 即 SPL Token的 Account, 见上面的`Account`的结构体
     - Mint Account: 即SPL Token 的 Mint, 见上面`Mint` 结构体
 
     ![](./imgs/solana_account_modle.png)
@@ -315,7 +315,8 @@
     - MainNet: https://api.mainnet-beta.solana.com
 
 - dev开发环境:
-  - 7DxeAgFoxk9Ha3sdciWE4G4hsR9CUjPxsHAxTmuCJrop
+  - 地址： 7DxeAgFoxk9Ha3sdciWE4G4hsR9CUjPxsHAxTmuCJrop
+  - 配置文件: `/home/yqq/.config/solana/cli/config.yml`
   - `/home/yqq/.config/solana/id.json`
 
     ```
@@ -331,3 +332,41 @@
 
   - 转账: `solana transfer --allow-unfunded-recipient devwuNsNYACyiEYxRNqMNseBpNnGfnd4ZwNHL7sphqv 0.001 -k /home/yqq/.config/solana/id.json`
   - 查看转账交易: https://explorer.solana.com/tx/5Menvb9eNuVSUCXTiSnMYxAEW55pcJeMPYZtuhEeBVtzdyuFZdDMTK23cSWZpqCSo6WZo61z1nieyS4LcNYY2Mv2?cluster=devnet
+
+## 使用钱包
+> https://www.solanazh.com/course/1-5
+
+- Phantom钱包： https://chrome.google.com/webstore/detail/phantom/bfnaelmomeimhlpmgjnjophhpkkoljpa
+
+- 导入助记词： `dinosaur domain jelly echo mountain cause drastic slab know dance ready open`
+  - 选择devnet,  这里地址和命令行地址不同, 应该是phantom派生的路径不一样
+  - 通过水龙头获取sol,
+  - 使用钱包进行转账： https://explorer.solana.com/tx/46MhN6ynPEzSMCXSShr9cbdx7CrYZBo78H4ctf4bge2uxrSfh72Ht499XwuNCeuxSypiCpa3vFDWK3gYfamuU5Kq?cluster=devnet
+
+
+
+## 使用命令行发行SPL Token
+
+> https://www.solanazh.com/course/1-6
+
+
+
+- `spl-token create-token -C /home/yqq/.config/solana/cli/config.yml`
+
+    ```
+    $ spl-token create-token -C /home/yqq/.config/solana/cli/config.yml
+    Creating token GLr5Chj9H5Vv8yMjEZwMjMfZ1Co9Sz75sVfPYDqbbaL5 under program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA
+
+    Address:  GLr5Chj9H5Vv8yMjEZwMjMfZ1Co9Sz75sVfPYDqbbaL5
+    Decimals:  9
+
+    Signature: 2GKwsmWbevv6rUFGAQ3ZRSshdYJ5z69YgjaJUYqiSFT3yuw2mutkRBF88fP3D4HEG6eKpKDsf6oX1xVRavAcE8sf
+    ```
+    交易： https://explorer.solana.com/tx/2GKwsmWbevv6rUFGAQ3ZRSshdYJ5z69YgjaJUYqiSFT3yuw2mutkRBF88fP3D4HEG6eKpKDsf6oX1xVRavAcE8sf?cluster=devnet
+
+    ![](./imgs/spl_token_mint.jpg)
+    - 其中的新地址`GLr5Chj9H5Vv8yMjEZwMjMfZ1Co9Sz75sVfPYDqbbaL5` 就是 SPL Token的Mint账户(查看上述SPL Token 的2个关键账户数据结构， Mint 和Account)
+
+
+
+
