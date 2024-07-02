@@ -351,7 +351,7 @@
 
 
 
-- `spl-token create-token -C /home/yqq/.config/solana/cli/config.yml`
+- 创建SPL token： `spl-token create-token -C /home/yqq/.config/solana/cli/config.yml`
 
     ```
     $ spl-token create-token -C /home/yqq/.config/solana/cli/config.yml
@@ -367,6 +367,59 @@
     ![](./imgs/spl_token_mint.jpg)
     - 其中的新地址`GLr5Chj9H5Vv8yMjEZwMjMfZ1Co9Sz75sVfPYDqbbaL5` 就是 SPL Token的Mint账户(查看上述SPL Token 的2个关键账户数据结构， Mint 和Account)
 
+- 创建 SPL Token Account  (ATA, Associated Token Account): `spl-token create-account GLr5Chj9H5Vv8yMjEZwMjMfZ1Co9Sz75sVfPYDqbbaL5 -C /home/yqq/.config/solana/cli/config.yml`
+
+    ```
+    $ spl-token create-account GLr5Chj9H5Vv8yMjEZwMjMfZ1Co9Sz75sVfPYDqbbaL5 -C /home/yqq/.config/solana/cli/config.yml
+    Creating account FZQ6qrSHTPERXoQC9tp1WESVpzhZjugLMyQaHmg1BHmx
+
+    Signature: 4ww8QgwSDbWtHE4Z597zLF2xuQoHfivxyWm1WXt8yAMyfpGcykbpbki3H5mJvPtk4gSZgobBBotJxmxLFjVpF2Hb
+    ```
+    交易：https://explorer.solana.com/tx/4ww8QgwSDbWtHE4Z597zLF2xuQoHfivxyWm1WXt8yAMyfpGcykbpbki3H5mJvPtk4gSZgobBBotJxmxLFjVpF2Hb?cluster=devnet
 
 
+    - 其中 `FZQ6qrSHTPERXoQC9tp1WESVpzhZjugLMyQaHmg1BHmx` 就是ATA账号
 
+- mint代币到ATA账号 `spl-token mint GLr5Chj9H5Vv8yMjEZwMjMfZ1Co9Sz75sVfPYDqbbaL5  100 FZQ6qrSHTPERXoQC9tp1WESVpzhZjugLMyQaHmg1BHmx -C /home/yqq/.config/solana/cli/config.yml`
+
+
+    ```
+    $ spl-token mint GLr5Chj9H5Vv8yMjEZwMjMfZ1Co9Sz75sVfPYDqbbaL5  100 FZQ6qrSHTPERXoQC9tp1WESVpzhZjugLMyQaHmg1BHmx -C /home/yqq/.config/solana/cli/config.yml
+    Minting 100 tokens
+    Token: GLr5Chj9H5Vv8yMjEZwMjMfZ1Co9Sz75sVfPYDqbbaL5
+    Recipient: FZQ6qrSHTPERXoQC9tp1WESVpzhZjugLMyQaHmg1BHmx
+
+    Signature: 2iCGoBkVQqgAqphXwKMJ9BXdjrrfwGDJEggFCPDGXJaPhRRiPjMvCs3Vsvg41mccntF8WiZiJ7VTwYX8P1YMbZGj
+    ```
+
+    交易：https://explorer.solana.com/tx/2iCGoBkVQqgAqphXwKMJ9BXdjrrfwGDJEggFCPDGXJaPhRRiPjMvCs3Vsvg41mccntF8WiZiJ7VTwYX8P1YMbZGj?cluster=devnet
+
+- 查看代币余额: `spl-token balance GLr5Chj9H5Vv8yMjEZwMjMfZ1Co9Sz75sVfPYDqbbaL5 -C /home/yqq/.config/solana/cli/config.yml`
+  - 这里会自动计算钱包账户对应的Token的ATA账户，因此不用指定ATA账户
+
+    ```
+    $ spl-token balance GLr5Chj9H5Vv8yMjEZwMjMfZ1Co9Sz75sVfPYDqbbaL5 -C /home/yqq/.config/solana/cli/config.yml
+    100
+    ```
+
+- 转移SPL Token:  `spl-token transfer --fund-recipient  GLr5Chj9H5Vv8yMjEZwMjMfZ1Co9Sz75sVfPYDqbbaL5 1 38jEaxphBTa3NEg4K6nG8Zgs6eVsSsr9AoSZCfax2pH8 -C /home/yqq/.config/solana/cli/config.yml `
+
+
+    ```
+    $ spl-token transfer --fund-recipient  GLr5Chj9H5Vv8yMjEZwMjMfZ1Co9Sz75sVfPYDqbbaL5 1 38jEaxphBTa3NEg4K6nG8Zgs6eVsSsr9AoSZCfax2pH8 -C /home/yqq/.config/solana/cli/config.yml
+    Transfer 1 tokens
+    Sender: FZQ6qrSHTPERXoQC9tp1WESVpzhZjugLMyQaHmg1BHmx
+    Recipient: 38jEaxphBTa3NEg4K6nG8Zgs6eVsSsr9AoSZCfax2pH8
+    Recipient associated token account: 8gDUi1gMxy95WaMr5Phtmv8HoX52m5vw7t3Tum22n9hi
+    Funding recipient: 8gDUi1gMxy95WaMr5Phtmv8HoX52m5vw7t3Tum22n9hi
+
+    Signature: 4FUtCxJtinHJRDVuodm34fY15mBftbawhXEHD3qrvFKHK7hSiYXa4RrC3XgQBbcAK2H35VRXvuWZuP4eLMWV6b5i
+    ```
+
+    交易：https://explorer.solana.com/tx/4FUtCxJtinHJRDVuodm34fY15mBftbawhXEHD3qrvFKHK7hSiYXa4RrC3XgQBbcAK2H35VRXvuWZuP4eLMWV6b5i?cluster=devnet
+
+    - 第一步：如果目的地址没有SPL Token的ATA账户，那么，先给目的地址创建一个SPL Token 的ATA账户,
+      - 目的地址的ATA账户余额： https://explorer.solana.com/address/8gDUi1gMxy95WaMr5Phtmv8HoX52m5vw7t3Tum22n9hi?cluster=devnet
+    - 第二步：进行SPL Token转移
+
+- 再次查看余额: `spl-token balance GLr5Chj9H5Vv8yMjEZwMjMfZ1Co9Sz75sVfPYDqbbaL5 -C /home/yqq/.config/solana/cli/config.yml`
