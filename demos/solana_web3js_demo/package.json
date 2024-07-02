@@ -1,0 +1,13 @@
+{
+  "name": "solana_web3js_demo",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.94.0",
+    "tweetnacl": "^1.0.3"
+  }
+}
