@@ -18,6 +18,8 @@ import {
     getAssociatedTokenAddress,
     createAssociatedTokenAccountInstruction,
     getAccount,
+    mintToChecked,
+    createMintToCheckedInstruction
 } from "@solana/spl-token";
 // import * as bs58 from "bs58";
 import bs58 from "bs58";
@@ -215,9 +217,103 @@ async function getATAInfo() {
     */
 }
 
+async function getTokenBalance() {
+    const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
+
+    const tokenAccount = new PublicKey(
+        "CGnQCbwxAmKR5qZfV86biZxpwMRP6kjhnECjbP8qHQio"
+    );
+
+    let tokenAmount = await connection.getTokenAccountBalance(tokenAccount);
+    console.log(`amount: ${tokenAmount.value.amount}`);
+    console.log(`decimals: ${tokenAmount.value.decimals}`);
+}
+
+async function mintToken() {
+    // connection
+    const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
+
+    let secretKey = bs58.decode(
+        "5TaF2mrj1wu6Kb7dj5AETQmg4Shaoo17wo3YucjTjZNP42wbR7sWN62f8tJpnNGEsJoxW8rQWWxiPH4qPxaxruCJ"
+    );
+
+    const feePayer = Keypair.fromSecretKey(secretKey);
+
+    // 打印base58格式的私钥
+    // console.log(bs58.encode(feePayer.secretKey));
+
+    const alice = Keypair.fromSecretKey(
+        bs58.decode(
+            "4Qm4vkkBXkEkGpfG55v1UtMLe6qaXgTE6GjcBNaBJMyZEdNv5efFHgrbLZGj9tpsuuri945zfa7EnUGoj4i7dN1g"
+        )
+    );
+
+    // Token Mint Account 地址
+    const mintPubkey = new PublicKey(
+        "BtV3XUwFArdshJf2HWVyNHg23ooeEfAqJ5k8WLcTPVcW"
+    );
+
+    // 接受地址的 ATA,
+    // 也可以根据上面的方法， public key ，通过public key计算出 ATA
+    const receiverTokenAccountPubkeyATA = new PublicKey(
+        "CGnQCbwxAmKR5qZfV86biZxpwMRP6kjhnECjbP8qHQio"
+    );
+
+    // 方式1： 使用内建的方法
+    // 1) use build-in function
+    if (false) {
+        let txhash = await mintToChecked(
+            connection, // connection
+            feePayer, // fee payer
+            mintPubkey, // mint
+            receiverTokenAccountPubkeyATA, // receiver (should be a token account),
+            alice, // mint authority
+            1e8, // amount. if your decimals is 8, you mint 10^8 for 1 token.
+            8 // decimals
+        );
+        console.log(`txhash: ${txhash}`);
+        // https://explorer.solana.com/tx/3HQfKbQR5xhUQooGQRvYeAKUTHb5UqLtGoLfns6rjbzsakpZvWRDMm1q9GMdymDksB9TdoxCfdWTxrE5i8kg8j31?cluster=devnet
+
+        // 如果是多签账户
+        // if alice is a multisig account
+        // let txhash = await mintToChecked(
+        //   connection, // connection
+        //   feePayer, // fee payer
+        //   mintPubkey, // mint
+        //   tokenAccountPubkey, // receiver (should be a token account)
+        //   alice.publicKey, // !! mint authority pubkey !!
+        //   1e8, // amount. if your decimals is 8, you mint 10^8 for 1 token.
+        //   8, // decimals
+        //   [signer1, signer2 ...],
+        // );
+    }
+
+    // 方式2： 自己组装交易
+    // 2) compose by yourself
+    if (true) {
+        let tx = new Transaction().add(
+            createMintToCheckedInstruction(
+                mintPubkey, // mint
+                receiverTokenAccountPubkeyATA, // receiver (should be a token account)
+                alice.publicKey, // mint authority
+                1e8, // amount. if your decimals is 8, you mint 10^8 for 1 token.
+                8 // decimals
+                // [signer1, signer2 ...], // only multisig account will use
+            )
+        );
+        console.log(
+            `txhash: ${await connection.sendTransaction(tx, [
+                feePayer,
+                alice /* fee payer + mint authority */,
+            ])}`
+        );
+    }
+}
+
 // createToken();
 // createTokenV2();
 // getMintAccount();
 // createATA();
-
-getATAInfo();
+// getATAInfo();
+// getTokenBalance();
+mintToken();
