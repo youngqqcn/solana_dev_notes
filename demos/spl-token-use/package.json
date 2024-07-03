@@ -1,0 +1,14 @@
+{
+  "name": "spl-token-use",
+  "version": "1.0.0",
+  "main": "index.mjs",
+  "license": "MIT",
+  "dependencies": {
+    "@solana/spl-token": "^0.4.7",
+    "@solana/web3.js": "^1.94.0",
+    "bs58": "^6.0.0"
+  },
+  "scripts": {
+    "start": "node index.mjs"
+  }
+}

@@ -1183,6 +1183,9 @@ Connected (press CTRL+C to quit)
     ```
 
 - 进行 SPL Token的转移 [spl-token-demo](./demos/spl-token-demo)
+  > https://solanacookbook.com/references/token.html#how-to-create-a-new-token
+  > https://spl.solana.com/token
+
   - 基于 react 前端实现
   - 直接使用 `@solana/spl-token` 会报错
 
