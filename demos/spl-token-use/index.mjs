@@ -6,7 +6,6 @@ import {
     SystemProgram,
     PublicKey,
     SendTransactionError,
-
 } from "@solana/web3.js";
 
 import {
@@ -698,7 +697,7 @@ async function transferSOL2WrappedSOL_v2() {
             lamports:
                 (await getMinimumBalanceForRentExemptAccount(connection)) +
                 amount, // rent + amount
-            programId: TOKEN_PROGRAM_ID,
+            programId: TOKEN_PROGRAM_ID, // NOTE: 账户所有者. 这里直接将 programId 设置 TOKEN_PROGRAM_ID, 更加直接。 如果是 System Program，那么需要再转移所有权给Token Program
         }),
         // init token account
         createInitializeAccountInstruction(

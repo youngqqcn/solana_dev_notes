@@ -1124,6 +1124,16 @@ Connected (press CTRL+C to quit)
 - https://solana-labs.github.io/solana-web3.js/classes/Connection.html
 
 
+- spl-token 几个关键账户说明：
+  - TOKEN_PROGRAM_ID:
+    - 这是 SPL Token 程序的 ID。
+    - 它用于管理所有标准的 SPL Token 操作，如创建代币账户、转账、铸造等。
+  - ASSOCIATED_TOKEN_PROGRAM_ID
+    - 这是关联令牌账户（Associated Token Account，ATA）程序的 ID。
+    - ATA 程序用于创建和管理关联令牌账户，这是一种特殊类型的令牌账户，其地址是确定性的。
+    - ATA 程序不直接持有或管理令牌账户，它只是用来创建这些账户。
+
+
 
 - 进行 SOL 转账
 
