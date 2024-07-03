@@ -13,6 +13,11 @@ import {
     MINT_SIZE,
     getMinimumBalanceForRentExemptMint,
     createMint,
+    getMint,
+    createAssociatedTokenAccount,
+    getAssociatedTokenAddress,
+    createAssociatedTokenAccountInstruction,
+    getAccount,
 } from "@solana/spl-token";
 // import * as bs58 from "bs58";
 import bs58 from "bs58";
@@ -89,8 +94,130 @@ async function createTokenV2() {
     // 第二个参数signers ， 需要传入签名的keypair
     //           feePayer 是交易发起的签名
     //           mint  是 Mint Account 的签名
-    console.log(`txhash is ${await connection.sendTransaction(tx, [feePayer, mint])}`)
+    console.log(
+        `txhash is ${await connection.sendTransaction(tx, [feePayer, mint])}`
+    );
+}
+
+async function getMintAccount() {
+    const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
+
+    const mintAccountPublicKey = new PublicKey(
+        "BtV3XUwFArdshJf2HWVyNHg23ooeEfAqJ5k8WLcTPVcW"
+    );
+
+    let mintAccount = await getMint(connection, mintAccountPublicKey);
+
+    console.log(mintAccount);
+}
+
+// 创建 Token Account, 即 ATA 账号
+async function createATA() {
+    // connection
+    const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
+
+    let secretKey = bs58.decode(
+        "5TaF2mrj1wu6Kb7dj5AETQmg4Shaoo17wo3YucjTjZNP42wbR7sWN62f8tJpnNGEsJoxW8rQWWxiPH4qPxaxruCJ"
+    );
+
+    const feePayer = Keypair.fromSecretKey(secretKey);
+
+    // 打印base58格式的私钥
+    // console.log(bs58.encode(feePayer.secretKey));
+
+    const alice = new PublicKey("38jEaxphBTa3NEg4K6nG8Zgs6eVsSsr9AoSZCfax2pH8");
+
+    // Token Mint Account 地址
+    const mintPubkey = new PublicKey(
+        "BtV3XUwFArdshJf2HWVyNHg23ooeEfAqJ5k8WLcTPVcW"
+    );
+
+    // 使用内建的方法创建 ATA账号
+    // 方式1) use build-in function
+    if (false) {
+        let ata = await createAssociatedTokenAccount(
+            connection, // connection
+            feePayer, // fee payer
+            mintPubkey, // mint
+            alice // owner,
+        );
+        console.log(`ATA: ${ata.toBase58()}`);
+
+        // https://explorer.solana.com/address/7R6svto5X3gFuUUfBPYoyxk5uEvAFouruxjYj9ERRgAG?cluster=devnet
+    }
+
+    // 方式2: 自己组装创建ATA账号的交易
+    // 2) composed by yourself
+    if (true) {
+        // calculate ATA
+        let ata = await getAssociatedTokenAddress(
+            mintPubkey, // mint
+            feePayer.publicKey // owner
+        );
+        console.log(`ATA: ${ata.toBase58()}`);
+        // CGnQCbwxAmKR5qZfV86biZxpwMRP6kjhnECjbP8qHQio
+
+        // 使用 off-curve, 即由程序控制的账户， 而不是普通私钥钱包账户
+        // if your wallet is off-curve, you should use
+        // let ata = await getAssociatedTokenAddress(
+        //   mintPubkey, // mint
+        //   alice.publicKey // owner
+        //   true, // allowOwnerOffCurve
+        // );
+
+        let tx = new Transaction().add(
+            createAssociatedTokenAccountInstruction(
+                feePayer.publicKey, // payer
+                ata, // ata
+                feePayer.publicKey, // owner
+                mintPubkey // mint
+            )
+        );
+        console.log(
+            `txhash: ${await connection.sendTransaction(tx, [feePayer])}`
+        );
+        // https://explorer.solana.com/tx/4gSkVXtLHhgzeeCxSFjevRA7SfLsBdLFqf4wfDmtYKn2469VuVERF6rJVykkKrm4fCcTufL4w5ayPtmCbjjhFwv3?cluster=devnet
+    }
+}
+
+// 获取 ATA账户的信息（地址， 所属Token Mint账户（即代币）， owner）
+async function getATAInfo() {
+    const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
+
+    const tokenAccountPubkey = new PublicKey(
+        "CGnQCbwxAmKR5qZfV86biZxpwMRP6kjhnECjbP8qHQio"
+    );
+
+    let tokenAccount = await getAccount(connection, tokenAccountPubkey);
+    console.log(tokenAccount);
+
+    /*
+{
+  address: PublicKey [PublicKey(CGnQCbwxAmKR5qZfV86biZxpwMRP6kjhnECjbP8qHQio)] {
+    _bn: <BN: a77b9a2e6675feaecfba28f302bb288b22b47ef929d43de686bc49c48028b714>
+  },
+  mint: PublicKey [PublicKey(BtV3XUwFArdshJf2HWVyNHg23ooeEfAqJ5k8WLcTPVcW)] {
+    _bn: <BN: a1c5330ff9b5e7979aef5a57d0cb26406d2a60231a0d103157b09bb7ba20c42b>
+  },
+  owner: PublicKey [PublicKey(7DxeAgFoxk9Ha3sdciWE4G4hsR9CUjPxsHAxTmuCJrop)] {
+    _bn: <BN: 5c780128cbe90a7f09b53c731e689908fcf4018f1e1cf20271c04ebaa7758457>
+  },
+  amount: 0n,
+  delegate: null,
+  delegatedAmount: 0n,
+  isInitialized: true,
+  isFrozen: false,
+  isNative: false,
+  rentExemptReserve: null,
+  closeAuthority: null,
+  tlvData: <Buffer >
+}
+    */
 }
 
 // createToken();
-createTokenV2();
+// createTokenV2();
+// getMintAccount();
+// createATA();
+
+getATAInfo();
