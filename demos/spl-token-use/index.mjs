@@ -5,9 +5,15 @@ import {
     Transaction,
     SystemProgram,
     PublicKey,
+    SendTransactionError,
+
 } from "@solana/web3.js";
 
 import {
+    createCloseAccountInstruction,
+    createTransferInstruction,
+    createInitializeAccountInstruction,
+    getMinimumBalanceForRentExemptAccount,
     createInitializeMintInstruction,
     TOKEN_PROGRAM_ID,
     MINT_SIZE,
@@ -19,7 +25,16 @@ import {
     createAssociatedTokenAccountInstruction,
     getAccount,
     mintToChecked,
-    createMintToCheckedInstruction
+    createMintToCheckedInstruction,
+    transferChecked,
+    createTransferCheckedInstruction,
+    burnChecked,
+    createBurnCheckedInstruction,
+    createApproveCheckedInstruction,
+    NATIVE_MINT,
+    NATIVE_MINT_2022,
+    createSyncNativeInstruction,
+    ACCOUNT_SIZE,
 } from "@solana/spl-token";
 // import * as bs58 from "bs58";
 import bs58 from "bs58";
@@ -217,6 +232,7 @@ async function getATAInfo() {
     */
 }
 
+// 获取token余额
 async function getTokenBalance() {
     const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
@@ -229,6 +245,7 @@ async function getTokenBalance() {
     console.log(`decimals: ${tokenAmount.value.decimals}`);
 }
 
+// mint  token
 async function mintToken() {
     // connection
     const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
@@ -310,10 +327,416 @@ async function mintToken() {
     }
 }
 
+// 转移token
+async function transferToken() {
+    // connection
+    const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
+
+    let secretKey = bs58.decode(
+        "5TaF2mrj1wu6Kb7dj5AETQmg4Shaoo17wo3YucjTjZNP42wbR7sWN62f8tJpnNGEsJoxW8rQWWxiPH4qPxaxruCJ"
+    );
+
+    const feePayer = Keypair.fromSecretKey(secretKey);
+
+    // 打印base58格式的私钥
+    // console.log(bs58.encode(feePayer.secretKey));
+
+    const alice = Keypair.fromSecretKey(
+        bs58.decode(
+            "4Qm4vkkBXkEkGpfG55v1UtMLe6qaXgTE6GjcBNaBJMyZEdNv5efFHgrbLZGj9tpsuuri945zfa7EnUGoj4i7dN1g"
+        )
+    );
+
+    // Token Mint Account 地址
+    const mintPubkey = new PublicKey(
+        "BtV3XUwFArdshJf2HWVyNHg23ooeEfAqJ5k8WLcTPVcW"
+    );
+
+    const fromATA = await getAssociatedTokenAddress(
+        mintPubkey, // mint
+        feePayer.publicKey // owner
+    );
+
+    const toATA = await getAssociatedTokenAddress(
+        mintPubkey, // mint
+        // alice.publicKey // owner
+        new PublicKey("2KgowxogBrGqRcgXQEmqFvC3PGtCu66qERNJevYW8Ajh") //  toATA 必须是已经创建出来的
+    );
+    console.log(`ATA: ${toATA.toBase58()}`);
+
+    // 方式2： 使用内建方法
+    // 1) use build-in function
+    if (false) {
+        let txhash = await transferChecked(
+            connection, // connection
+            feePayer, // payer
+            fromATA, // from (should be a token account)
+            mintPubkey, // mint
+            toATA, // to (should be a token account)
+            feePayer, // from's owner
+            1e7, // amount, if your deciamls is 8, send 10^8 for 1 token
+            8 // decimals
+        );
+        console.log(`txhash: ${txhash}`);
+        // https://explorer.solana.com/tx/r1UHqXwb5QyMKiyDjDyqDW1f7MC3nLv3vzG1bsF2TXuRCU7Whq4sR1STYpfU4knvweFJ7PTm2mNjeKGzEJrtESe?cluster=devnet
+    }
+
+    // 方式2： 自己组装交易，更加灵活
+    // 2) compose by yourself
+    if (true) {
+        let tx = new Transaction()
+            // .add(
+            //     // 为新地址创建 ATA 账号,
+            //     // 如果ATA账户已经存在，则不能重复创建，重复创建会报 Provided owner is not allowed
+            //     createAssociatedTokenAccountInstruction(
+            //         feePayer.publicKey, // payer
+            //         toATA, // ata
+            //         new PublicKey(
+            //             "2KgowxogBrGqRcgXQEmqFvC3PGtCu66qERNJevYW8Ajh"
+            //         ), // owner
+            //         mintPubkey // mint
+            //     )
+            // )
+            .add(
+                // 创建转移交易
+                createTransferCheckedInstruction(
+                    fromATA, // from (should be a token account)
+                    mintPubkey, // mint
+                    toATA, // to (should be a token account)
+                    feePayer.publicKey, // from's owner
+                    1e7, // amount, if your deciamls is 8, send 10^8 for 1 token
+                    8 // decimals
+                )
+            );
+        console.log(
+            `txhash: ${await connection.sendTransaction(tx, [
+                feePayer /* fee payer + owner */,
+                // feePayer,
+            ])}`
+        );
+    }
+}
+
+// 销毁token
+async function burnToken() {
+    // connection
+    const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
+
+    let secretKey = bs58.decode(
+        "5TaF2mrj1wu6Kb7dj5AETQmg4Shaoo17wo3YucjTjZNP42wbR7sWN62f8tJpnNGEsJoxW8rQWWxiPH4qPxaxruCJ"
+    );
+
+    const feePayer = Keypair.fromSecretKey(secretKey);
+
+    // 打印base58格式的私钥
+    // console.log(bs58.encode(feePayer.secretKey));
+
+    const alice = Keypair.fromSecretKey(
+        bs58.decode(
+            "4Qm4vkkBXkEkGpfG55v1UtMLe6qaXgTE6GjcBNaBJMyZEdNv5efFHgrbLZGj9tpsuuri945zfa7EnUGoj4i7dN1g"
+        )
+    );
+
+    // Token Mint Account 地址
+    const mintPubkey = new PublicKey(
+        "BtV3XUwFArdshJf2HWVyNHg23ooeEfAqJ5k8WLcTPVcW"
+    );
+
+    const fromATA = await getAssociatedTokenAddress(
+        mintPubkey, // mint
+        feePayer.publicKey // owner
+    );
+
+    // 方式1：使用内建方法
+    // 1) use build-in function
+    if (false) {
+        let txhash = await burnChecked(
+            connection, // connection
+            feePayer, // payer
+            fromATA, // token account
+            mintPubkey, // mint
+            feePayer, // owner
+            1e5, // amount, if your deciamls is 8, 10^8 for 1 token
+            8
+        );
+        console.log(`txhash: ${txhash}`);
+        // https://explorer.solana.com/tx/4kBAsbWoGS4BZRHz18Wqudqu5WkmrdiXZdEUucqHtWNZZjXtKA5j466S9PsWp3W7Sof5XzTLbKvBmRKQBMUic5RY?cluster=devnet
+    }
+
+    // 方式2： 自己组装交易
+    // 2) compose by yourself
+    if (true) {
+        let tx = new Transaction().add(
+            createBurnCheckedInstruction(
+                fromATA, // token account
+                mintPubkey, // mint
+                feePayer.publicKey, // owner of token account
+                1e5, // amount, if your deciamls is 8, 10^8 for 1 token
+                8 // decimals
+            )
+        );
+        console.log(
+            `txhash: ${await connection.sendTransaction(tx, [
+                feePayer,
+                // alice /* fee payer + token authority */,
+            ])}`
+        );
+        // https://explorer.solana.com/tx/35GnwX1hzxXRLJbBkLn5v5pRv46mLXJYFZHBm4n9EMpnKjTdowxAZPtzKGxAWt2KhTbNupdCFjjq41D8uR85UJyP?cluster=devnet
+    }
+}
+
+// approve , 注意：A token account can only delegate to one account at the same time
+async function approveToken() {
+    // connection
+    const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
+
+    let secretKey = bs58.decode(
+        "5TaF2mrj1wu6Kb7dj5AETQmg4Shaoo17wo3YucjTjZNP42wbR7sWN62f8tJpnNGEsJoxW8rQWWxiPH4qPxaxruCJ"
+    );
+
+    const feePayer = Keypair.fromSecretKey(secretKey);
+
+    // 打印base58格式的私钥
+    // console.log(bs58.encode(feePayer.secretKey));
+
+    const alice = Keypair.fromSecretKey(
+        bs58.decode(
+            "4Qm4vkkBXkEkGpfG55v1UtMLe6qaXgTE6GjcBNaBJMyZEdNv5efFHgrbLZGj9tpsuuri945zfa7EnUGoj4i7dN1g"
+        )
+    );
+
+    // Token Mint Account 地址
+    const mintPubkey = new PublicKey(
+        "BtV3XUwFArdshJf2HWVyNHg23ooeEfAqJ5k8WLcTPVcW"
+    );
+
+    const fromATA = await getAssociatedTokenAddress(
+        mintPubkey, // mint
+        feePayer.publicKey // owner
+    );
+
+    const aliceATA = await getAssociatedTokenAddress(
+        mintPubkey, // mint
+        alice.publicKey // owner
+    );
+    console.log(aliceATA.toBase58());
+    // return;
+
+    // let tx = new Transaction().add(
+    //     createApproveCheckedInstruction(
+    //         fromATA, // token account
+    //         mintPubkey, // mint
+    //         alice.publicKey, // delegate
+    //         feePayer.publicKey, // owner of token account
+    //         100e8, // amount, if your deciamls is 8, 10^8 for 1 token
+    //         8 // decimals
+    //     )
+    // );
+    // 撤销approve
+    // let tx = new Transaction().add(
+    //     createRevokeInstruction(
+    //       tokenAccountPubkey, // token account
+    //       alice.publicKey // owner of token account
+    //     )
+    //   );
+
+    // console.log(
+    //     `txhash: ${await connection.sendTransaction(tx, [
+    //         feePayer,
+    //         // alice /* fee payer + owner */,
+    //     ])}`
+    // );
+
+    const toATA = await getAssociatedTokenAddress(
+        mintPubkey, // mint
+        // alice.publicKey // owner
+        new PublicKey("2KgowxogBrGqRcgXQEmqFvC3PGtCu66qERNJevYW8Ajh") //  toATA 必须是已经创建出来的
+    );
+    console.log(`ATA: ${toATA.toBase58()}`);
+
+    // 委托之后，对委托金额发起转账
+    let tx = new Transaction().add(
+        createTransferCheckedInstruction(
+            fromATA, // from token account
+            mintPubkey, // mint
+            aliceATA, // to ， 必须是 ATA
+            alice.publicKey, // owner of token account
+            1e5, // amount, if your deciamls is 8, 10^8 for 1 token
+            8 // decimals
+        )
+    );
+
+    // try {
+    //     const simulation = await connection.simulateTransaction(tx, [alice]);
+    //     // console.log("simulation result: ", simu);
+    //     if (simulation.value.err) {
+    //         console.error("Simulation error:", simulation.value.err);
+    //         // 分析模拟错误
+    //         return;
+    //     }
+    // } catch (error) {
+    //     console.error(`Error sending transaction: ${error}`);
+
+    //     if (error instanceof SendTransactionError) {
+    //         if (error.getLogs) {
+    //             console.error("Transaction Logs:", await error.getLogs());
+    //         }
+    //     }
+    // }
+
+    try {
+        let txhash = await connection.sendTransaction(tx, [
+            // feePayer,
+            alice /* fee payer + owner */,
+        ]);
+    } catch (error) {
+        console.error(`Error sending transaction: ${error}`);
+
+        if (error instanceof SendTransactionError) {
+            if (error.getLogs) {
+                console.error("Transaction Logs:", await error.getLogs());
+            }
+        }
+    }
+
+    // 转移delegate的token
+    // https://explorer.solana.com/tx/4ZWm86tbesCo37Eae55EdyK5BLCq6DUx9NJDieMUQd1GDRxQjcpkaaSsC5npbYrC3GLXyiaCMrnJtH3qFzX9kf3B?cluster=devnet
+    // https://explorer.solana.com/tx/PseiRdbTSEGdV1SMiRFZj8iKqcdCpGUjV1gVkbeqQVt4B97EoHwz62JYqxSC2PTxL7hD2cWeLGh3n2u6HF7tyGk?cluster=devnet
+}
+
+// 方式1： 将 SOL 转为 wrapped SOL
+// https://solanacookbook.com/references/token.html#how-to-manage-wrapped-sol
+async function transferSOL2WrappedSOL() {
+    // connection
+    const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
+
+    let secretKey = bs58.decode(
+        "5TaF2mrj1wu6Kb7dj5AETQmg4Shaoo17wo3YucjTjZNP42wbR7sWN62f8tJpnNGEsJoxW8rQWWxiPH4qPxaxruCJ"
+    );
+
+    const feePayer = Keypair.fromSecretKey(secretKey);
+
+    // 打印base58格式的私钥
+    // console.log(bs58.encode(feePayer.secretKey));
+
+    const alice = Keypair.fromSecretKey(
+        bs58.decode(
+            "4Qm4vkkBXkEkGpfG55v1UtMLe6qaXgTE6GjcBNaBJMyZEdNv5efFHgrbLZGj9tpsuuri945zfa7EnUGoj4i7dN1g"
+        )
+    );
+
+    // 为 alice 创建 wrapped SOL  的 ATA
+    let aliceATA = await getAssociatedTokenAddress(
+        NATIVE_MINT, // mint
+        alice.publicKey // owner
+    );
+
+    // 2rfzEvRYyJtTBg3EpW3yJynNZuCChJunBtdnJbHg8ory
+    console.log("aliceATA: ", aliceATA);
+
+    let tx = new Transaction().add(
+        // 为alice 创建 wrapped SOL 的 ATA账号
+        createAssociatedTokenAccountInstruction(
+            alice.publicKey,
+            aliceATA,
+            alice.publicKey,
+            NATIVE_MINT
+        ),
+        // trasnfer SOL
+        SystemProgram.transfer({
+            fromPubkey: alice.publicKey,
+            toPubkey: aliceATA,
+            lamports: 1e8, // 0.1 SOL
+        }),
+        // sync wrapped SOL balance
+        createSyncNativeInstruction(aliceATA)
+    );
+
+    console.log(`txhash: ${await connection.sendTransaction(tx, [alice])}`);
+    // https://explorer.solana.com/tx/3nYJ1Vx65guiXdh7xg5EMRehCbzULkubeUGLQYvraoc5GESstuiFNHHBfyDdmA2QQKaernLWvQh1zPqUYaauGuWv?cluster=devnet
+}
+
+// 方式2： 将 SOL 转为 wrapped SOL
+// https://solanacookbook.com/references/token.html#add-balance
+async function transferSOL2WrappedSOL_v2() {
+    // connection
+    const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
+
+    let secretKey = bs58.decode(
+        "5TaF2mrj1wu6Kb7dj5AETQmg4Shaoo17wo3YucjTjZNP42wbR7sWN62f8tJpnNGEsJoxW8rQWWxiPH4qPxaxruCJ"
+    );
+
+    const feePayer = Keypair.fromSecretKey(secretKey);
+
+    // 打印base58格式的私钥
+    // console.log(bs58.encode(feePayer.secretKey));
+
+    const alice = Keypair.fromSecretKey(
+        bs58.decode(
+            "4Qm4vkkBXkEkGpfG55v1UtMLe6qaXgTE6GjcBNaBJMyZEdNv5efFHgrbLZGj9tpsuuri945zfa7EnUGoj4i7dN1g"
+        )
+    );
+
+    // 为 alice 创建 wrapped SOL  的 ATA
+    let aliceATA = await getAssociatedTokenAddress(
+        NATIVE_MINT, // mint
+        alice.publicKey // owner
+    );
+
+    // 2rfzEvRYyJtTBg3EpW3yJynNZuCChJunBtdnJbHg8ory
+    console.log("aliceATA: ", aliceATA);
+
+    let auxAccount = Keypair.generate();
+    let amount = 1 * 1e8; // 0.1 SOL
+
+    let tx = new Transaction().add(
+        // create token account
+        SystemProgram.createAccount({
+            fromPubkey: alice.publicKey,
+            newAccountPubkey: auxAccount.publicKey,
+            space: ACCOUNT_SIZE,
+            lamports:
+                (await getMinimumBalanceForRentExemptAccount(connection)) +
+                amount, // rent + amount
+            programId: TOKEN_PROGRAM_ID,
+        }),
+        // init token account
+        createInitializeAccountInstruction(
+            auxAccount.publicKey,
+            NATIVE_MINT,
+            alice.publicKey
+        ),
+        // transfer WSOL
+        createTransferInstruction(
+            auxAccount.publicKey,
+            aliceATA,
+            alice.publicKey,
+            amount
+        ),
+        // close aux account
+        createCloseAccountInstruction(
+            auxAccount.publicKey,
+            alice.publicKey,
+            alice.publicKey
+        )
+    );
+
+    console.log(
+        `txhash: ${await connection.sendTransaction(tx, [alice, auxAccount])}`
+    );
+    // https://explorer.solana.com/tx/2qieppEvkAi6Vkru4u552whj2swhKT6wqQkzjikDPCrEK2jtWRMby2g6fcxM9aJmNrMWqyovvjY6y8qoncGb6ZzF?cluster=devnet
+}
+
 // createToken();
 // createTokenV2();
 // getMintAccount();
 // createATA();
 // getATAInfo();
 // getTokenBalance();
-mintToken();
+// mintToken();
+// transferToken();
+// burnToken();
+// approveToken();
+
+// transferSOL2WrappedSOL();
+transferSOL2WrappedSOL_v2();
