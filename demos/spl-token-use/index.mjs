@@ -697,7 +697,46 @@ async function transferSOL2WrappedSOL_v2() {
             lamports:
                 (await getMinimumBalanceForRentExemptAccount(connection)) +
                 amount, // rent + amount
-            programId: TOKEN_PROGRAM_ID, // NOTE: 账户所有者. 这里直接将 programId 设置 TOKEN_PROGRAM_ID, 更加直接。 如果是 System Program，那么需要再转移所有权给Token Program
+
+            // 问题：为什么这里直接写 TOKEN_PROGRAM_ID 而不是 System Program 的ID ?
+            //
+            // 参考： https://solana.com/docs/core/accounts
+            //
+            // 为自定义程序创建一个数据账户(Data Account)，可以分为2步：
+            //  1, 调用 System Program 创建一个账户，然后将权限转移给自定义程序
+            //  2, 调用自定义程序(此时是账户的owner)初始化该账户的数据
+            //
+            // NOTE: 只有 System Program 可以创建新账户, 因此这里的programId 是指新账户创建之后
+            //    System Program 转移权限给新的 program,
+            //
+            //
+            // 可以看以下源码：
+            //    https://github.com/solana-labs/solana-web3.js/blob/50b5da186668f88268b0eb54b5b8a5be189892d6/packages/library-legacy/src/programs/system.ts#L749-L772
+            /*
+            static programId: PublicKey = new PublicKey(
+                '11111111111111111111111111111111',
+            ); //  Public key that identifies the System program
+
+            static createAccount(params: CreateAccountParams): TransactionInstruction {
+                const type = SYSTEM_INSTRUCTION_LAYOUTS.Create;
+                const data = encodeData(type, {
+                    lamports: params.lamports,
+                    space: params.space,
+                    programId: toBuffer(params.programId.toBuffer()), // 这里程序定义程序ID
+                });
+
+                return new TransactionInstruction({
+                    keys: [
+                        {pubkey: params.fromPubkey, isSigner: true, isWritable: true},
+                        {pubkey: params.newAccountPubkey, isSigner: true, isWritable: true},
+                    ],
+                    programId: this.programId, // 这是 System Program 的 ID
+                    data, // 程序输入数据
+                });
+            }
+            */
+            programId: TOKEN_PROGRAM_ID, // 正确
+            // programId: SystemProgram.programId // 错误
         }),
         // init token account
         createInitializeAccountInstruction(
