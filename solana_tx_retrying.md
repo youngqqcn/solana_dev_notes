@@ -47,3 +47,8 @@ Transaction Processing Unit (TPU) 处理交易的阶段：
 
 - 第3种：  临时分叉， 引用了被丢弃的分叉区块hash
   ![](./imgs/rt-dropped-minority-fork-post-process.png)
+
+
+
+
+
