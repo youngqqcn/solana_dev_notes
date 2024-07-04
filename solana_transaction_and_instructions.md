@@ -196,9 +196,12 @@ pub struct AccountMeta {
 
 ### 转移 SOL的交易示例图：
 
-![](./imgs/sol-transfer.svg)
+- 结构图
+
+    ![](./imgs/sol-transfer.svg)
 
 
-### 交易执行流程：
-![](./imgs/sol-transfer-process.svg)
+- SOL转账交易执行流程：
+
+    ![](./imgs/sol-transfer-process.svg)
 
