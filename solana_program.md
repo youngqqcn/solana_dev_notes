@@ -31,3 +31,4 @@
 
 - 链上程序可以更新, 必须通过`upgrade authority`账号, 这个账号通常是初始程序部署的账号
 - 如果`upgrade authority`为空， 那么程序就是不可变的，并且不可升级
+  - https://github.com/solana-labs/solana/blob/27eff8408b7223bb3c4ab70523f8a8dca3ca6645/programs/bpf_loader/src/lib.rs#L865
