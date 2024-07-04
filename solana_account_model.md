@@ -7,6 +7,8 @@
 
 - 不同于以太坊中只有智能合约可以存储状态, solana中所有账户都可以存储状态
 - solana的智能合约(可执行账户)仅存储程序代码(不可变)， 不存储状态
+  - 可升级： https://solana.com/docs/core/programs#updating-solana-programs
+  - 不可变: https://solana.wiki/docs/solidity-guide/accounts/
 - solana中的智能合约(可执行账户)的状态存储在其他账户(不可执行,但可变)中
   - 这些存储状态的账户(数据账户)，其owner是智能合约(可执行账户)
 - solana中每个账户有一个owner，仅owner可以修改状态
