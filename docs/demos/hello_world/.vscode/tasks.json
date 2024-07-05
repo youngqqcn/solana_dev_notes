@@ -1,0 +1,23 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "cargo build-sbf --debug",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "solana-debugger",
+            "type": "shell",
+
+
+            "command": "solana-ledger-tool program run -l  ${workspaceFolder}/test-ledger -e debugger ${workspaceFolder}/target/deploy/hello_world.so",
+            "problemMatcher": []
+        }
+    ]
+}

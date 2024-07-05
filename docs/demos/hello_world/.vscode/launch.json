@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "type": "lldb",
+        "request": "custom",
+        "name": "Debug",
+        "targetCreateCommands": [
+          "target create ${workspaceFolder}/target/deploy/hello_world.debug"
+        ],
+        "processCreateCommands": ["gdb-remote 127.0.0.1:9001"]
+      }
+    ]
+  }

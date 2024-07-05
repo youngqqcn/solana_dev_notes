@@ -4,7 +4,7 @@ fansland_ai
 
 
 # Solana开发资源
-
+- solana开发课程: https://www.soldev.app/course
 - Solana开发资源：https://www.notion.so/Solana-fca856aad4e5441f80f28cc4e015ca98
 - Solana开发者中心：https://docs.solana.com/developers
 - TinTinLand社区资源：https://www.notion.so/TinTinLand-Community-3f0b56879c57411f9a04dd82ba541e6a
