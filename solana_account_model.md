@@ -3,6 +3,8 @@
 > 强烈推荐: https://solana.wiki/docs/solidity-guide/accounts/
 - https://solanacookbook.com/zh/core-concepts/accounts.html#%E8%B4%A6%E6%88%B7%E6%A8%A1%E5%9E%8B
 
+- 账户模型:
+  - https://x.com/pencilflip/status/1452402100470644739
 
 
 - 不同于以太坊中只有智能合约可以存储状态, solana中所有账户都可以存储状态

@@ -10,7 +10,9 @@
 - PDA 落在Ed25519曲线之外，并且没有对应的私钥
   -
 - 程序可以为自己派生出来的PDA"签名"(达到签名的效果，并不是普通账户的签名 ),不需要私钥
-
+  - https://solanacookbook.com/core-concepts/pdas.html#deep-dive
+  - https://x.com/pencilflip/status/1455948263853600768?s=20&t=J2JXCwv395D7MNkX7a9LGw
+  - https://www.brianfriel.xyz/understanding-program-derived-addresses/
 
     ![](./imgs/pda.svg)
 
@@ -25,7 +27,16 @@
 
 - PDA账户如果已经被创建，不能重复创建，否则交易失败
 
+
+- 深入理解：
+  - https://x.com/pencilflip/status/1455678830262173697
+  ![](./imgs/pda.jpeg)
+
+
+
 ### 如何生成PDA
 
 
   ![](./imgs/pda-derivation.svg)
+
+

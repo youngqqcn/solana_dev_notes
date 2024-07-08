@@ -2,6 +2,9 @@
 
 > https://solana.com/docs/core/tokens
 
+- https://x.com/pencilflip/status/1454141877972779013
+
+- SPL Token官方文档: https://spl.solana.com/associated-token-account
 
 ### 关键点
 

@@ -299,7 +299,7 @@
 - "PDA": 程序派生出来的账户
 - "拥有者": owner
 
-![](./imgs/account-matrix.11f1f839.png)
+![](./imgs/pda.jpeg)
 
 
 
