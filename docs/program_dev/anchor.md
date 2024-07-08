@@ -1,6 +1,7 @@
 # anchor
 
 
+- https://www.solanazh.com/course/7-3
 install: https://www.anchor-lang.com/docs/installation
 
 
@@ -32,6 +33,7 @@ anchor init <new-workspace-name>
 
 - Anchor `Account`
   - https://docs.rs/anchor-lang/latest/anchor_lang/accounts/account/struct.Account.html
+
 
 
 

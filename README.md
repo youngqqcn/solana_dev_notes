@@ -20,3 +20,11 @@ fansland_ai
 - https://www.solanazh.com/
 - 英文开发资料：
 - https://x.com/therealchaseeb/status/1726141760672584089?s=20
+
+
+
+# Anchor资源
+
+- Anchor官方例子: https://github.com/coral-xyz/anchor/tree/master/examples/tutorial
+- Anchor Docs: https://www.anchor-lang.com/docs/high-level-overview
+
