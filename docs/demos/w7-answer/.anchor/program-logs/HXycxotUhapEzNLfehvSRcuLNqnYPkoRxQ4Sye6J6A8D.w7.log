@@ -1,0 +1,11 @@
+Streaming transaction logs mentioning HXycxotUhapEzNLfehvSRcuLNqnYPkoRxQ4Sye6J6A8D. Confirmed commitment
+Transaction executed in slot 244582738:
+  Signature: 3KBUfabgAhWzGGsB4HjVStxrwunEvCsW5usREaUPB3jHfdDLTUu1JzPJibh2UCPXPZJUQ8M6uznwyZ9BmRExc1E8
+  Status: Ok
+  Log Messages:
+    Program HXycxotUhapEzNLfehvSRcuLNqnYPkoRxQ4Sye6J6A8D invoke [1]
+    Program log: Instruction: ExtMint
+    Program 11111111111111111111111111111111 invoke [2]
+    Program 11111111111111111111111111111111 success
+    Program HXycxotUhapEzNLfehvSRcuLNqnYPkoRxQ4Sye6J6A8D consumed 13315 of 200000 compute units
+    Program HXycxotUhapEzNLfehvSRcuLNqnYPkoRxQ4Sye6J6A8D success
