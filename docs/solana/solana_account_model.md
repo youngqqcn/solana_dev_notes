@@ -1,11 +1,10 @@
 # 深入理解 Solana 账户模型
 - 官方文档(推荐)：https://solana.com/docs/core/accounts
-> 强烈推荐: https://solana.wiki/docs/solidity-guide/accounts/
-- https://solanacookbook.com/zh/core-concepts/accounts.html#%E8%B4%A6%E6%88%B7%E6%A8%A1%E5%9E%8B
 
 - 账户模型:
-  - https://x.com/pencilflip/status/1452402100470644739
-
+  - 推荐: https://x.com/pencilflip/status/1452402100470644739
+  - https://solanacookbook.com/zh/core-concepts/accounts.html#%E8%B4%A6%E6%88%B7%E6%A8%A1%E5%9E%8B
+  - https://solana.wiki/docs/solidity-guide/accounts/
 
 - 不同于以太坊中只有智能合约可以存储状态, solana中所有账户都可以存储状态
 - solana的智能合约(可执行账户)仅存储程序代码(不可变)， 不存储状态
@@ -13,8 +12,8 @@
   - 不可变(字节码不可变): https://solana.wiki/docs/solidity-guide/accounts/
   - 关于这个"可升级"和"不可变"，可以看Solana的账户模型, solana程序账户的指令也是存储在一个特殊的数据账户中，因此"可升级"
 - solana中的智能合约(可执行账户)的状态存储在其他账户(不可执行,但可变)中
-  - 这些存储状态的账户(数据账户)，其owner是智能合约(可执行账户)
-- solana中每个账户有一个owner，仅owner可以修改状态
+  - 这些存储状态的账户(数据账户)，其owner是程序(可执行账户)
+- solana中每个账户有一个owner，仅owner可以修改账户状态
 - solana提供了很多有用的系统程序(合约), 属于runtime运行时
   - https://docs.solanalabs.com/runtime/programs
   - System Program:
@@ -27,13 +26,13 @@
       - 分配数据空间
       - 转移普通账户(owner是 System Program)的余额
       - 仅owner是 System Program 可以支付手续费
-    - Program id: 11111111111111111111111111111111
+    - Program id: `11111111111111111111111111111111`
     - Instructions: SystemInstruction
   - BPF Loader Program
     - 功能：
       - 是所有自定义程序的owner
       - Deploys, upgrades, and executes programs on the chain.
-    - Program id: BPFLoaderUpgradeab1e11111111111111111111111
+    - Program id: `BPFLoaderUpgradeab1e11111111111111111111111`
     - Instructions: LoaderInstruction
   - SPL Token
     - TODO  :

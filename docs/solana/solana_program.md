@@ -18,11 +18,10 @@
 
 ### 编写Solana程序
 
-- Anchor框架(推荐)
-  - https://solana.com/developers/guides/getstarted/intro-to-anchor
-
 - Native Rust
 
+- Anchor框架(推荐)
+  - https://solana.com/developers/guides/getstarted/intro-to-anchor
 
 
 ### 更新Solana程序

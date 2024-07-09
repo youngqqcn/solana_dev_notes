@@ -1,5 +1,7 @@
 # Cross Program Invocation (CPI)
 
+> https://solana.com/docs/core/cpi
+
 - CPI： 一个程序调用其他程序中的指令, 这就给了程序的可组合性
 
 ![](./imgs/cpi.svg)
