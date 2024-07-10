@@ -12,10 +12,10 @@ fansland_ai
   - 开发课程: https://www.soldev.app/course
     - 中文: https://www.solanazh.com/
   - Solana官方开发文档：https://docs.solana.com/developers
+  - Cookbook: https://solanacookbook.com/
   - 开发者: https://github.com/solana-developers
   - 工具库: https://github.com/solana-developers/solana-tools
   - Solana程序示例： https://github.com/solana-developers/program-examples
-  - Cookbook: https://solanacookbook.com/
   - Anchor初步Counter示例：https://github.com/solana-developers/anchor-starter/tree/main
   - Solana生态工具： https://solana.com/ecosystem
   - 706共学社：
