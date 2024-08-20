@@ -5,11 +5,11 @@ import matplotlib.ticker as ticker
 
 # 定义函数
 def token_supply(x):
-    return 1073000191 - 32190005730 / (30 + x)
+    return 1073000191 - 32190000000 / (30 + x)
 
 # 计算导数 dy/dx
 def derivative_token_supply(x):
-    return 32190005730 / (30 + x)**2
+    return 32190000000 / (30 + x)**2
 
 # 计算价格 dx/dy = 1 / (dy/dx)
 def token_price(x):
@@ -75,5 +75,5 @@ ax1.legend(loc='upper left')
 ax2.legend(loc='upper right')
 
 # 显示图表
-plt.title('PUMP.FUN Bonding Curve 定价曲线, y=1073000191-32190005730/(30+x)')
+plt.title('PUMP.FUN Bonding Curve 定价曲线, y=1073000191-32190000000/(30+x)')
 plt.show()
