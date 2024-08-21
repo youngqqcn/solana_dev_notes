@@ -52,6 +52,9 @@ ax2.yaxis.set_major_formatter(FormatStrFormatter('%.1e'))
 x_val = 32190000000/(1073000191 - 793100000) - 30
 ax1.axvline(x=x_val, color='green', linestyle='--')
 
+# 总量 10 亿
+ax1.axhline(y=1e9, color='blue', linestyle=':')
+
 # 找到与 x = 85 对应的 y 和 z 值
 y_val = np.interp(x_val, x, y)
 z_val = np.interp(x_val, x, z)
@@ -70,8 +73,11 @@ init_price_val = np.interp(0, x, z)
 ax2.plot(0, init_price_val, 'ro')
 ax2.text(0 + 1, init_price_val - 0.1e-7  , f'初始价格 (0,{init_price_val:.10f})', color='red', fontsize=10, )
 
+ax2.axhline(y=init_price_val, color='red', linestyle=":")
+
 ax1.plot(0, 0, 'bo')
-ax1.text(0 + 1, 0, f'初始供应量 (0, 0)', color='blue', fontsize=10)
+# ax1.text(0 + 1, 0, f'初始供应量 (0, 0)', color='blue', fontsize=10)
+
 
 # 添加图例
 fig.tight_layout()
@@ -79,7 +85,7 @@ ax1.legend(loc='upper left')
 ax2.legend(loc='upper right')
 
 # 显示图表
-plt.title('FanslandAI Bonding Curve曲线, y=1073000191-32190000000/(30+x)')
+plt.title('FanslandAI Bonding Curve')
 plt.show()
 
 
