@@ -5,7 +5,7 @@ import matplotlib.ticker as ticker
 
 # 定义函数
 def token_supply(x):
-    return 1073000191 - 32190000000 / (30 + x)
+    return 1073000000 - 32190000000 / (30 + x)
 
 # 计算导数 dy/dx
 def derivative_token_supply(x):
@@ -49,7 +49,7 @@ ax2.set_ylim([0, max(z) * 1.1])  # 确保z轴从0开始，并稍微增加上限
 ax2.yaxis.set_major_formatter(FormatStrFormatter('%.1e'))
 
 # 在 x = 85 处添加虚线
-x_val = 32190000000/(1073000191 - 793100000) - 30
+x_val = 32190000000/(1073000000 - 793100000) - 30
 ax1.axvline(x=x_val, color='green', linestyle='--')
 
 # 总量 10 亿

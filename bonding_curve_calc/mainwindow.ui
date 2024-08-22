@@ -52,7 +52,7 @@
       <string>formular_3</string>
      </property>
     </widget>
-    <widget class="QWidget" name="">
+    <widget class="QWidget" name="layoutWidget">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -72,7 +72,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="le_now_pool_sol_amount">
+         <widget class="QLineEdit" name="le_buy_now_pool_sol_amount">
           <property name="placeholderText">
            <string>input current SOL in the pool</string>
           </property>
@@ -90,7 +90,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="le_buy_sol_amount"/>
+         <widget class="QLineEdit" name="le_buy_buy_sol_amount"/>
         </item>
        </layout>
       </item>
@@ -104,7 +104,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="le_will_get_token_amount">
+         <widget class="QLineEdit" name="le_buy_will_get_token_amount">
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -122,7 +122,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="le_after_buy_market_price">
+         <widget class="QLineEdit" name="le_buy_after_buy_market_price">
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -171,7 +171,7 @@
       <string>formular_4</string>
      </property>
     </widget>
-    <widget class="QWidget" name="">
+    <widget class="QWidget" name="layoutWidget">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -191,7 +191,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="le_now_pool_token_amount"/>
+         <widget class="QLineEdit" name="le_sell_now_pool_token_amount"/>
         </item>
        </layout>
       </item>
@@ -205,7 +205,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="le_sell_token_amount"/>
+         <widget class="QLineEdit" name="le_sell_sell_token_amount"/>
         </item>
        </layout>
       </item>
@@ -219,7 +219,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="le_will_get_sol_amount">
+         <widget class="QLineEdit" name="le_sell_will_get_sol_amount">
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -237,7 +237,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="le_after_sell_market_price">
+         <widget class="QLineEdit" name="le_sell_after_sell_market_price">
           <property name="readOnly">
            <bool>true</bool>
           </property>

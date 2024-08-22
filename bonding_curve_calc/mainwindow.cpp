@@ -8,8 +8,8 @@
 
 //const uint64_t DECIMALS = 1000000000;
 const uint64_t DECIMALS = 1;
-const uint64_t K = 1073000191 * DECIMALS;
-const uint64_t V = 32190000000 * DECIMALS;
+const double K = 1073000000 * DECIMALS;
+const double V = 32190000000 * DECIMALS;
 
 
 MainWindow::MainWindow(QWidget *parent)
@@ -57,43 +57,50 @@ MainWindow::~MainWindow()
 }
 
 
-void MainWindow::on_le_now_pool_sol_amount_textChanged(const QString &input)
+void MainWindow::on_le_buy_now_pool_sol_amount_textChanged(const QString &input)
 {
    calc_buy_common();
 }
 
 
-void MainWindow::on_le_buy_sol_amount_textChanged(const QString &arg1)
+void MainWindow::on_le_buy_buy_sol_amount_textChanged(const QString &arg1)
 {
    calc_buy_common();
 }
 
 void MainWindow::calc_buy_common()
 {
-    if(0 == ui->le_buy_sol_amount->text().trimmed().length()){
+    if(0 == ui->le_buy_buy_sol_amount->text().trimmed().length()){
+        qDebug() << "1111111";
         return;
     }
-    if(0 == ui->le_now_pool_sol_amount->text().trimmed().length()) {
+    if(0 == ui->le_buy_now_pool_sol_amount->text().trimmed().length()) {
+        qDebug() << "2222222";
         return;
     }
 
     // convert to number
-    QString pool_sol_amount_str =  ui->le_now_pool_sol_amount->text();
+    QString pool_sol_amount_str =  ui->le_buy_now_pool_sol_amount->text();
     qDebug() << "pool_sol_amount_str: " << pool_sol_amount_str;
 
     double x = pool_sol_amount_str.toDouble();
     qDebug() << "x: " << x;
 
 
-    QString buy_sol_amount_str =  ui->le_buy_sol_amount->text();
+    QString buy_sol_amount_str =  ui->le_buy_buy_sol_amount->text();
     double dx = buy_sol_amount_str.toDouble();
     qDebug() << "buy_sol_amount_str = " << buy_sol_amount_str;
     qDebug() << "dx: " << dx;
 
+    // the tokens user will get
     double dy = calc_buy_for_dy(x, dx);
+    ui->le_buy_will_get_token_amount->setText( QString::number(dy, 10, 10));
 
-    ui->le_will_get_token_amount->setText( QString::number(dy, 10, 6));
+    // the latest market price
+    double market_price = calc_market_price(x + dx);
+    ui->le_buy_after_buy_market_price->setText(QString::number(market_price, 10, 10));
 }
+
 
 
 double MainWindow::calc_buy_for_dy(double x, double dx)
@@ -101,17 +108,70 @@ double MainWindow::calc_buy_for_dy(double x, double dx)
     qDebug() << "x = " << x;
     qDebug() << "dx = " << dx;
     double dy = (V * dx) / ((30 + x)*(30 + x + dx));
-    qDebug() << "dy = " << QString::number(dy, 'f', 6);
+    qDebug() << "dy = " << QString::number(dy, 'f', 10);
     return dy;
 }
 
-uint64_t MainWindow::calc_sell_for_dx(uint64_t y, uint64_t dy)
+
+double MainWindow::calc_market_price(double x)
 {
-    // TODO
-    return 0;
+    double market_price = ((30 + x)*( 30 + x)) / V;
+    return market_price;
 }
 
 
+void MainWindow::on_le_sell_now_pool_token_amount_textChanged(const QString &arg1)
+{
+    calc_sell_common();
+}
 
 
+void MainWindow::on_le_sell_sell_token_amount_textChanged(const QString &arg1)
+{
+    calc_sell_common();
+}
+
+void MainWindow::calc_sell_common()
+{
+    if(0 == ui->le_sell_now_pool_token_amount->text().trimmed().length()){
+        return;
+    }
+    if(0 == ui->le_sell_sell_token_amount->text().trimmed().length()) {
+        return;
+    }
+
+    // convert to number
+    QString pool_token_amount_str =  ui->le_sell_now_pool_token_amount->text();
+    qDebug() << "pool_token_amount_str: " << pool_token_amount_str;
+
+    double y = pool_token_amount_str.toDouble();
+    qDebug() << "y: " << y;
+
+
+    QString sell_token_amount_str =  ui->le_sell_sell_token_amount->text();
+    double dy = sell_token_amount_str.toDouble();
+    qDebug() << "sell_token_amount_str = " << sell_token_amount_str;
+    qDebug() << "dy: " << dy;
+
+
+
+
+    double dx = calc_sell_for_dx(y, dy);
+    ui->le_sell_will_get_sol_amount->setText( QString::number(dx, 'f', 10) );
+
+    // the latest market price
+    double x_latest = V/(K - (y - dy)) - 30;
+    qDebug() << "x_latest = " << QString::number(x_latest, 10, 10);
+    double market_price = calc_market_price(x_latest);
+    ui->le_sell_after_sell_market_price->setText(QString::number(market_price, 10, 10));
+}
+
+double MainWindow::calc_sell_for_dx(double y, double dy)
+{
+    qDebug() << "y = " << y;
+    qDebug() << "dy = " << dy;
+    double dx = (V * dy)/((K - y)*(K - y + dy));
+    qDebug() << "dx = " << QString::number(dx, 'f', 10);
+    return dx;
+}
 
