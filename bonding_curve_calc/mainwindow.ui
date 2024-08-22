@@ -72,7 +72,11 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="lineEdit_5"/>
+         <widget class="QLineEdit" name="le_now_pool_sol_amount">
+          <property name="placeholderText">
+           <string>input current SOL in the pool</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>
@@ -86,7 +90,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="lineEdit"/>
+         <widget class="QLineEdit" name="le_buy_sol_amount"/>
         </item>
        </layout>
       </item>
@@ -100,7 +104,11 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="lineEdit_2"/>
+         <widget class="QLineEdit" name="le_will_get_token_amount">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>
@@ -114,7 +122,11 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="lineEdit_7"/>
+         <widget class="QLineEdit" name="le_after_buy_market_price">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>
@@ -179,7 +191,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="lineEdit_3"/>
+         <widget class="QLineEdit" name="le_now_pool_token_amount"/>
         </item>
        </layout>
       </item>
@@ -193,7 +205,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="lineEdit_4"/>
+         <widget class="QLineEdit" name="le_sell_token_amount"/>
         </item>
        </layout>
       </item>
@@ -207,7 +219,11 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="lineEdit_6"/>
+         <widget class="QLineEdit" name="le_will_get_sol_amount">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>
@@ -221,7 +237,11 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="lineEdit_8"/>
+         <widget class="QLineEdit" name="le_after_sell_market_price">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>
