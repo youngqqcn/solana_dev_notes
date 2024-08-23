@@ -4,7 +4,7 @@
 #include <QDebug>
 #include <QtNumeric>
 #include <QtMath>
-#include <QException>
+#include <QDoubleValidator>
 
 //const uint64_t DECIMALS = 1000000000;
 const uint64_t DECIMALS = 1;
@@ -28,6 +28,11 @@ MainWindow::MainWindow(QWidget *parent)
 
 
 
+    ui->le_buy_buy_sol_amount->setValidator( new QDoubleValidator(0, std::numeric_limits<double>::max(), 9, this) );
+    ui->le_buy_now_pool_sol_amount->setValidator(new QDoubleValidator(0, std::numeric_limits<double>::max(), 9, this));
+    ui->le_sell_now_pool_token_amount->setValidator(new QDoubleValidator(0, std::numeric_limits<double>::max(), 6, this));
+    ui->le_sell_sell_token_amount->setValidator(new QDoubleValidator(0, std::numeric_limits<double>::max(), 6, this));
+
     QPixmap pm("./formular_1.png"); // <- path to image file
     ui->label_formular_1->setPixmap(pm);
     ui->label_formular_1->setScaledContents(true);
@@ -48,6 +53,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->label_formular_4->setPixmap(pm4);
     ui->label_formular_4->setScaledContents(true);
     ui->label_formular_4->resize(pm4.size());
+
+
 
 }
 
@@ -71,11 +78,9 @@ void MainWindow::on_le_buy_buy_sol_amount_textChanged(const QString &arg1)
 void MainWindow::calc_buy_common()
 {
     if(0 == ui->le_buy_buy_sol_amount->text().trimmed().length()){
-        qDebug() << "1111111";
         return;
     }
     if(0 == ui->le_buy_now_pool_sol_amount->text().trimmed().length()) {
-        qDebug() << "2222222";
         return;
     }
 
@@ -84,18 +89,27 @@ void MainWindow::calc_buy_common()
     qDebug() << "pool_sol_amount_str: " << pool_sol_amount_str;
 
     bool ok = false;
-    double x = pool_sol_amount_str.toDouble();
+    double x = pool_sol_amount_str.toDouble(&ok);
+    if(!ok) {
+        qDebug() << "invalid number";
+        return;
+    }
     qDebug() << "x: " << x;
 
 
     QString buy_sol_amount_str =  ui->le_buy_buy_sol_amount->text();
-    double dx = buy_sol_amount_str.toDouble();
+    ok = false;
+    double dx = buy_sol_amount_str.toDouble(&ok);
+    if(!ok) {
+        qDebug() << "invalid number";
+        return;
+    }
     qDebug() << "buy_sol_amount_str = " << buy_sol_amount_str;
     qDebug() << "dx: " << dx;
 
     // the tokens user will get
     double dy = calc_buy_for_dy(x, dx);
-    ui->le_buy_will_get_token_amount->setText( QString::number(dy, 10, 10));
+    ui->le_buy_will_get_token_amount->setText( QString::number(dy, 10, 6));
 
     // the latest market price
     double market_price = calc_market_price(x + dx);
@@ -109,7 +123,7 @@ double MainWindow::calc_buy_for_dy(double x, double dx)
     qDebug() << "x = " << x;
     qDebug() << "dx = " << dx;
     double dy = (V * dx) / ((30 + x)*(30 + x + dx));
-    qDebug() << "dy = " << QString::number(dy, 'f', 10);
+    qDebug() << "dy = " << QString::number(dy, 'f', 6);
     return dy;
 }
 
@@ -145,26 +159,33 @@ void MainWindow::calc_sell_common()
     QString pool_token_amount_str =  ui->le_sell_now_pool_token_amount->text();
     qDebug() << "pool_token_amount_str: " << pool_token_amount_str;
 
-    double y = pool_token_amount_str.toDouble();
+    bool ok = false;
+    double y = pool_token_amount_str.toDouble(&ok);
     qDebug() << "y: " << y;
-
+    if(!ok) {
+        qDebug() << "invalid number";
+        return;
+    }
 
     QString sell_token_amount_str =  ui->le_sell_sell_token_amount->text();
-    double dy = sell_token_amount_str.toDouble();
+    ok = false;
+    double dy = sell_token_amount_str.toDouble(&ok);
+    if(!ok) {
+        qDebug() << "invalid number";
+        return;
+    }
     qDebug() << "sell_token_amount_str = " << sell_token_amount_str;
     qDebug() << "dy: " << dy;
 
 
-
-
     double dx = calc_sell_for_dx(y, dy);
-    ui->le_sell_will_get_sol_amount->setText( QString::number(dx, 'f', 10) );
+    ui->le_sell_will_get_sol_amount->setText( QString::number(dx, 'f', 9) );
 
     // the latest market price
     double x_latest = V/(K - (y - dy)) - 30;
-    qDebug() << "x_latest = " << QString::number(x_latest, 10, 10);
+    qDebug() << "x_latest = " << QString::number(x_latest, 'f', 9);
     double market_price = calc_market_price(x_latest);
-    ui->le_sell_after_sell_market_price->setText(QString::number(market_price, 10, 10));
+    ui->le_sell_after_sell_market_price->setText(QString::number(market_price, 'f', 10));
 }
 
 double MainWindow::calc_sell_for_dx(double y, double dy)
@@ -172,7 +193,7 @@ double MainWindow::calc_sell_for_dx(double y, double dy)
     qDebug() << "y = " << y;
     qDebug() << "dy = " << dy;
     double dx = (V * dy)/((K - y)*(K - y + dy));
-    qDebug() << "dx = " << QString::number(dx, 'f', 10);
+    qDebug() << "dx = " << QString::number(dx, 'f', 9);
     return dx;
 }
 
