@@ -4,6 +4,10 @@ import * as web3 from "@solana/web3.js";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { getAccount, getMint } from "@solana/spl-token";
 
+//
+// Brk9QJQCZesVuMGfbciecWiQqDTcuUwMv434d8gzbZuW
+// 3RCqR2zRArb6VVkmpj1PtX78dbYLz4xjL3LY8HTFXoK7
+
 app.get(
     "/getBondingCurveInfo/:address/:mint",
     async (req: Request, res: Response) => {
