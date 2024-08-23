@@ -20,3 +20,6 @@ dist
 target
 test-ledger
 build-bonding_curve_calc-Desktop_Qt_6_4_1_GCC_64bit-Debug
+build
+calc
+*.exe
