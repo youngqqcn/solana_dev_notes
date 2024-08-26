@@ -1,8 +1,13 @@
 "use client";
 import { useState } from "react";
 import * as web3 from "@solana/web3.js";
-import { Connection, PublicKey } from "@solana/web3.js";
-import { getAccount, getMint } from "@solana/spl-token";
+import { Connection, PublicKey, SystemProgram } from "@solana/web3.js";
+import {
+    getAccount,
+    getAssociatedTokenAddressSync,
+    getMint,
+    TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
 
 interface RespType {
     sol: number; // Adjust the type based on your actual data type
@@ -11,19 +16,38 @@ interface RespType {
 }
 
 export default function Home() {
-    const [bondingCurvePDA, setBondingCurvePDA] = useState(
-        "Brk9QJQCZesVuMGfbciecWiQqDTcuUwMv434d8gzbZuW"
+    const [programId, setProgramId] = useState(
+        "B8ncJu5LdBgPeDqfpHirUhr9nunpjvjB8tACc9X3kc3L"
     );
-    const [tokenMint, setTokenMint] = useState(
-        "3RCqR2zRArb6VVkmpj1PtX78dbYLz4xjL3LY8HTFXoK7"
-    );
+
+    const [bondingCurveATA, setBondingCurveATA] = useState("");
+    const [bondingCurvePDA, setBondingCurvePDA] = useState("");
+    const [tokenMint, setTokenMint] = useState("");
+
+    // 虚拟池子， 注意与实际账户余额区分
     const [curSolAmountInPool, setCurSolAmountInPool] = useState("");
     const [afterTradingSolAmountInPool, setAfterTradingSolAmountInPool] =
         useState("");
-    const [tokenAmountInPool, setTokenAmountInPool] = useState("");
+    const [curTokenAmountInPool, setCurTokenAmountInPool] = useState("");
+    const [afterTradingTokenAmountInPool, setAfterTradingTokenAmountInPool] =
+        useState("");
+
+    // bonding curve PDA 账户实际余额 , 注意和虚拟池子区分
+    const [curBondingCurveSolAmount, setCurBondingCurvePDASolAmount] =
+        useState("");
+    const [curBondingCurveTokenAmount, setCurBondingCurveTokenAmount] =
+        useState("");
+    const [
+        afterTradingBondingCurveSolAmount,
+        setAfterTradingBondingCurveSolAmount,
+    ] = useState("");
+    const [
+        afterTradingBondingCurveTokenAmount,
+        setafterTradingBondingCurveTokenAmount,
+    ] = useState("");
 
     const [payInAmount, setPayInAmount] = useState("");
-    const [payOutAmount, setPayOutAmount] = useState("");
+    const [payOutAmount, setPayOutAmount] = useState("0.12");
     const [marketPrice, setMarketPrice] = useState("");
 
     // buy/sell 操作
@@ -31,39 +55,50 @@ export default function Home() {
     const [isBuyOperation, setIsBuyOperation] = useState(true); // true: buy, false: sell
 
     // 付出的Token文案
-    const [payOutText, setPayOutText] = useState("买入数量(SOL数量):");
-    const [payInText, setPayInText] = useState("得到的数量(Token数量):");
-    // const [calcButtonText, setCalcButtonText] = useState("计算买入");
+    const [payOutText, setPayOutText] = useState("你想买入的数量(SOL数量):");
+    const [payInText, setPayInText] = useState("你将得到的Token数量:");
+
+    function getBondingCurvePDA(tokenMint: String): [PublicKey, PublicKey] {
+        let programIdAcc = new PublicKey(programId);
+
+        // 计算存放 sol 的pda
+        let [bondingCurvePda] = PublicKey.findProgramAddressSync(
+            [
+                Buffer.from("liquidity_sol_vault"),
+                new PublicKey(tokenMint).toBuffer(),
+            ],
+            programIdAcc
+        );
+        console.log("Bonding Curve PDA 地址: ", bondingCurvePda.toBase58());
+
+        let ataAcc = getAssociatedTokenAddressSync(
+            new PublicKey(tokenMint),
+            bondingCurvePda,
+            true,
+            TOKEN_PROGRAM_ID
+        );
+        return [bondingCurvePda, ataAcc];
+    }
 
     async function getTokenBalance(
-        bondingCurvePDA: String,
+        connection: Connection,
+        bondingCurvePDA: PublicKey,
         tokenMint: String
     ): Promise<RespType> {
-        let url = "https://api.devnet.solana.com";
-        let connection = new web3.Connection(url);
-
         // 获取 SOL 余额
-        // let bondingCurvePDA = req.params.address;
-        console.log("bonding curve pda: ", bondingCurvePDA);
-
-        // let mint = req.params.mint;
-        // console.log("mint : ", req.params.mint);
-
-        // let accInfo = await connection.getAccountInfo(new web3.PublicKey(bondingCurvePDA));
-        // accInfo?.data.
+        console.log("存放SOL的地址: ", bondingCurvePDA.toBase58());
+        let rawSolBalance = await connection.getBalance(bondingCurvePDA);
 
         // TODO: 这里要减去账户租金, 最保险的做法，应该读取PDA账户中的变量值
-        let accountSize = 130;
+        let accountSize = 0;
         let rent = await connection.getMinimumBalanceForRentExemption(
             accountSize
         );
         console.log("rent =", rent);
 
-        let rawSolBalance = await connection.getBalance(
-            new web3.PublicKey(bondingCurvePDA)
-        );
+        // TODO: 使用 bondignCurve地址存 SOL
         console.log("rawSolBalance = ", rawSolBalance);
-        let trueSolBalance = rawSolBalance - rent; // 减去租金
+        let trueSolBalance = rawSolBalance - rent;
         console.log("trueSolBalance = ", trueSolBalance);
 
         // 创建钱包地址的 PublicKey
@@ -129,16 +164,37 @@ export default function Home() {
 
     const handleCalculate = async () => {
         try {
+            let url = "https://api.devnet.solana.com";
+            let connection = new Connection(url);
+
+            let [bondingCurvePDARet, bondingCurveATARet] =
+                getBondingCurvePDA(tokenMint);
+
+            console.log("bondingCurvePDARet =====", bondingCurvePDARet);
+            console.log("bondingCurveATARet =====", bondingCurveATARet);
+
             console.log("Calculation triggered");
+
+            // const [bondingCurvePdaRet, tokenMintRet] =
+            //     await getBondingCurvePDAByTokenATA(connection, bondingCurveATA);
+
+            // console.log("tokenMintRet = ", tokenMintRet.toBase58());
+
+            setBondingCurvePDA(bondingCurvePDARet.toBase58());
+            setBondingCurveATA(bondingCurveATARet.toBase58());
 
             console.log("bondingCurvePDA = ", bondingCurvePDA);
             console.log("tokenMint = ", tokenMint);
-            console.log("tokenAmountInPool = ", tokenAmountInPool);
+            console.log("tokenAmountInPool = ", curTokenAmountInPool);
             console.log("marketPrice = ", marketPrice);
             console.log("payInAmount = ", payInAmount);
             console.log("payOutAmount = ", payOutAmount);
 
-            let rsp = await getTokenBalance(bondingCurvePDA, tokenMint);
+            let rsp = await getTokenBalance(
+                connection,
+                bondingCurvePDARet,
+                tokenMint
+            );
             console.log("======获取结果: ");
             console.log(rsp);
 
@@ -147,6 +203,7 @@ export default function Home() {
             if (isBuyOperation) {
                 // 买入token
                 let x = rsp.sol;
+                let y = 1000000000 - rsp.token;
                 dx = parseFloat(payOutAmount);
                 dy = calc_buy_for_dy(x, dx);
                 console.log("dy = ", dy);
@@ -155,15 +212,32 @@ export default function Home() {
                 mprice = calc_market_price(x + dx);
                 setPayInAmount(dy.toFixed(6).toString());
                 setMarketPrice(mprice.toFixed(10).toString());
+
+                // 虚拟池子余额
                 setCurSolAmountInPool(rsp.sol.toFixed(9).toString());
-                setTokenAmountInPool(rsp.token.toFixed(6).toString());
+                setCurTokenAmountInPool(y.toFixed(6).toString());
                 setAfterTradingSolAmountInPool(
                     (rsp.sol + dx).toFixed(9).toString()
+                );
+                setAfterTradingTokenAmountInPool(
+                    (y + dy).toFixed(6).toString()
+                );
+
+                // 链上Bonding Curve  PDA账户余额
+                setCurBondingCurvePDASolAmount(rsp.sol.toFixed(9).toString());
+                setAfterTradingBondingCurveSolAmount(
+                    (rsp.sol + dx).toFixed(9).toString()
+                );
+                setCurBondingCurveTokenAmount(rsp.token.toFixed(6).toString());
+                setafterTradingBondingCurveTokenAmount(
+                    (rsp.token - dy).toFixed(6).toString()
                 );
             } else {
                 // 卖出token
                 let x = rsp.sol;
-                let y = rsp.token;
+                // 注意: 总量减去现有的，才是真正卖出的，真正卖出的才是 虚拟池子中的 token数量
+                let y = 1000000000 - rsp.token;
+                console.log("y = ", y);
                 dy = parseFloat(payOutAmount);
                 dx = calc_sell_for_dx(y, dy);
                 console.log("dx = ", dx);
@@ -172,10 +246,25 @@ export default function Home() {
                 mprice = calc_market_price(x - dx);
                 setPayInAmount(dx.toFixed(9).toString()); // sol
                 setMarketPrice(mprice.toFixed(10).toString());
+
+                // 虚拟池子余额
                 setCurSolAmountInPool(rsp.sol.toFixed(9).toString());
-                setTokenAmountInPool(rsp.token.toFixed(6).toString());
+                setCurTokenAmountInPool(rsp.token.toFixed(6).toString());
                 setAfterTradingSolAmountInPool(
                     (rsp.sol - dx).toFixed(9).toString()
+                );
+                setAfterTradingTokenAmountInPool(
+                    (y - dy).toFixed(6).toString()
+                );
+
+                // 链上Bonding Curve  PDA账户余额
+                setCurBondingCurvePDASolAmount(rsp.sol.toFixed(9).toString());
+                setAfterTradingBondingCurveSolAmount(
+                    (rsp.sol - dx).toFixed(9).toString()
+                );
+                setCurBondingCurveTokenAmount(rsp.token.toFixed(6).toString());
+                setafterTradingBondingCurveTokenAmount(
+                    (rsp.token + dy).toFixed(6).toString()
                 );
             }
         } catch (error) {
@@ -197,10 +286,12 @@ export default function Home() {
 
         setSelectedOption(select);
         setPayOutText(
-            select == "buy" ? "买入数量(SOL数量):" : "卖出数量(Token数量):"
+            select == "buy"
+                ? "你想买入的数量(SOL的数量):"
+                : "你想卖出的数量(Token的数量):"
         );
         setPayInText(
-            select == "buy" ? "得到的数量(Token数量):" : "得到的数量(SOL数量):"
+            select == "buy" ? "你将得到的Token数量:" : "你将得到的SOL数量:"
         );
 
         // 设置交易类型
@@ -210,7 +301,14 @@ export default function Home() {
     return (
         <div>
             <h2>FanslandAI-交易计算</h2>
+            <div>
+                <label>程序ID: </label>
+                <span>{programId}</span>
+            </div>
+            <br></br>
+
             <div style={{ display: "flex", flexDirection: "row" }}>
+                <label>交易类型: </label>
                 <label style={{ marginRight: "20px" }}>
                     <input
                         type="radio"
@@ -232,22 +330,27 @@ export default function Home() {
             </div>
 
             <div>
-                <label>BondingCurve PDA地址 : </label>
+                <label>Token Mint地址 : </label>
                 <input
-                    type="text"
-                    value={bondingCurvePDA}
-                    onChange={(e) => setBondingCurvePDA(e.target.value)}
-                    placeholder="输入Bonding Curve PDA地址"
-                />
-            </div>
-
-            <div>
-                <label>Token Mint: </label>
-                <input
+                    className="url-input"
                     type="text"
                     value={tokenMint}
-                    onChange={(e) => setTokenMint(e.target.value)}
-                    placeholder="输入Token Mint的地址"
+                    onChange={(e) => {
+                        let input = e.target.value;
+                        if (
+                            input.startsWith("https") &&
+                            input.length >=
+                                44 +
+                                    "https://test-ai.fansland.xyz/trade/".length
+                        ) {
+                            let startIndex = input.indexOf("trade/") + 6;
+                            let endIndex = startIndex + 44;
+                            input = input.substring(startIndex, endIndex);
+                        }
+
+                        setTokenMint(input);
+                    }}
+                    placeholder="输入Token Mint地址"
                 />
             </div>
 
@@ -255,6 +358,7 @@ export default function Home() {
                 <div style={{ marginRight: "20px" }}>
                     <label>{payOutText}</label>
                     <input
+                        className="large-input"
                         type="number"
                         value={payOutAmount}
                         onChange={(e) => setPayOutAmount(e.target.value)}
@@ -265,36 +369,73 @@ export default function Home() {
             </div>
 
             <div>
-                <label>{payInText}</label>
-                <input type="text" value={payInAmount} disabled />
+                <label>{payInText} </label>
+                <span>{payInAmount} </span>
+            </div>
+
+            <br></br>
+
+            <div>
+                <label>当前虚拟池中当前SOL数量: </label>
+                <span>{curSolAmountInPool}</span>
             </div>
 
             <div>
-                <label>当前池中当前SOL数量: </label>
-                <input type="text" value={curSolAmountInPool} disabled />
+                <label>交易后虚拟池中SOL数量: </label>
+                <span>{afterTradingSolAmountInPool}</span>
             </div>
 
             <div>
-                <label>交易后池中SOL数量: </label>
-                <input
-                    type="text"
-                    value={afterTradingSolAmountInPool}
-                    disabled
-                />
+                <label>当前虚拟池中的Token数量: </label>
+                <span>{curTokenAmountInPool}</span>
+            </div>
+            <div>
+                <label>交易后虚拟池中的Token数量: </label>
+                <span>{afterTradingTokenAmountInPool}</span>
+            </div>
+
+            <br></br>
+            <div>
+                <label>BondingCurve PDA地址 : </label>
+                <a
+                    href={`https://explorer.solana.com/address/${bondingCurvePDA}?cluster=devnet`}
+                >
+                    {bondingCurvePDA}
+                </a>
             </div>
 
             <div>
-                <label>当前池中的Token数量: </label>
-                <input type="text" value={tokenAmountInPool} disabled />
-            </div>
-            <div>
-                <label>交易后池中的Token数量: </label>
-                <input type="text" value={tokenAmountInPool} disabled />
+                <label>BondingCurve ATA地址: </label>
+                <a
+                    href={`https://explorer.solana.com/address/${bondingCurveATA}?cluster=devnet`}
+                >
+                    {bondingCurveATA}
+                </a>
             </div>
 
             <div>
-                <label>最新成交价(市场价): </label>
-                <input type="text" value={marketPrice} disabled />
+                <label>当前BondingCurve的Token余额: </label>
+                <span>{curBondingCurveTokenAmount}</span>
+            </div>
+
+            <div>
+                <label>交易后BondingCurve的Token余额: </label>
+                <span>{afterTradingBondingCurveTokenAmount}</span>
+            </div>
+            <div>
+                <label>当前BondingCurve的SOL余额: </label>
+                <span>{curBondingCurveSolAmount}</span>
+            </div>
+            <div>
+                <label>交易后BondingCurve的SOL余额: </label>
+                <span>{afterTradingBondingCurveSolAmount}</span>
+            </div>
+
+            <br></br>
+
+            <div>
+                <label>交易后最新成交价(市场价): </label>
+                <span>{marketPrice}</span>
             </div>
         </div>
     );

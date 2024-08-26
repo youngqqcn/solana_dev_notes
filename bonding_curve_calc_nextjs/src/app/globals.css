@@ -31,3 +31,19 @@ body {
     text-wrap: balance;
   }
 } */
+
+
+.url-input {
+    width: 600px;
+    height: 25px;
+    font-size: 14px; /* 可选：增加字体大小 */
+    padding: 2px; /* 可选：添加内边距 */
+}
+
+.large-input {
+    min-width: 200px;
+    max-width: 600px;
+    height: 25px;
+    font-size: 14px; /* 可选：增加字体大小 */
+    padding: 2px; /* 可选：添加内边距 */
+}
