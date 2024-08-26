@@ -58,6 +58,9 @@ export default function Home() {
     const [payOutText, setPayOutText] = useState("你想买入的数量(SOL数量):");
     const [payInText, setPayInText] = useState("你将得到的Token数量:");
 
+    // 默认买入
+    const [payInFormularImgPath, setPayInFormularImgPath] = useState("./formular_dy.png");
+
     function getBondingCurvePDA(tokenMint: String): [PublicKey, PublicKey] {
         let programIdAcc = new PublicKey(programId);
 
@@ -294,8 +297,13 @@ export default function Home() {
             select == "buy" ? "你将得到的Token数量:" : "你将得到的SOL数量:"
         );
 
+
+
         // 设置交易类型
         setIsBuyOperation(select == "buy" ? true : false);
+
+        // 设置公式图片
+        setPayInFormularImgPath( select == "buy" ? "./formular_dy.png" : "./formular_dx.png" );
     };
 
     return (
@@ -328,6 +336,7 @@ export default function Home() {
                     卖出Token
                 </label>
             </div>
+            <br></br>
 
             <div>
                 <label>Token Mint地址 : </label>
@@ -353,6 +362,7 @@ export default function Home() {
                     placeholder="输入Token Mint地址"
                 />
             </div>
+            <br></br>
 
             <div style={{ display: "flex", flexDirection: "row" }}>
                 <div style={{ marginRight: "20px" }}>
@@ -368,12 +378,21 @@ export default function Home() {
                 <button onClick={handleCalculate}>开始计算</button>
             </div>
 
+            <br></br>
+            <hr></hr>
+
             <div>
                 <label>{payInText} </label>
                 <span>{payInAmount} </span>
+                <div>
+                    <label> 计算公式: </label>
+                    <br></br>
+                    <img src={payInFormularImgPath} />
+                </div>
             </div>
 
             <br></br>
+            <hr></hr>
 
             <div>
                 <label>当前虚拟池中当前SOL数量: </label>
@@ -395,6 +414,8 @@ export default function Home() {
             </div>
 
             <br></br>
+            <hr></hr>
+
             <div>
                 <label>BondingCurve PDA地址 : </label>
                 <a
@@ -433,10 +454,19 @@ export default function Home() {
 
             <br></br>
 
+            <hr></hr>
+
             <div>
                 <label>交易后最新成交价(市场价): </label>
                 <span>{marketPrice}</span>
             </div>
+
+            <div>
+                <label>计算公式: </label>
+                <br></br>
+                <img src="./formular_price.png" />
+            </div>
+            <hr></hr>
         </div>
     );
 }
