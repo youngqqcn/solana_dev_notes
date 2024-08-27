@@ -32,7 +32,6 @@ body {
   }
 } */
 
-
 .url-input {
     width: 600px;
     height: 25px;
@@ -46,4 +45,32 @@ body {
     height: 25px;
     font-size: 14px; /* 可选：增加字体大小 */
     padding: 2px; /* 可选：添加内边距 */
+}
+
+.my-table {
+    /* border-collapse:; */
+    /* width: 100%; */
+    border-spacing: 0;
+}
+
+.my-table th,
+.my-table td {
+    border: 0.1px solid rgb(114, 109, 109);
+    /* padding: 0; */
+    text-align: left;
+    /* margin: -1px 0 0 -1px; */
+    background-color: rgb(230, 230, 230);
+}
+
+.my-button {
+    background-color: #ffffff;
+    color: white;
+    padding: 10px 20px;
+    border: 1px solid rgb(74, 12, 245);
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.my-button:hover {
+    background-color: #ccd5f1;
 }

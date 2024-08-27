@@ -8,6 +8,7 @@ import {
     getMint,
     TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
+import { Metaplex, keypairIdentity } from "@metaplex-foundation/js";
 
 interface RespType {
     sol: number; // Adjust the type based on your actual data type
@@ -15,7 +16,17 @@ interface RespType {
     // decimals: number;
 }
 
+interface TokenMintInfo {
+    symbol: String;
+    decimals: number;
+    supply: number;
+    mintAuthority: String;
+}
+
 export default function Home() {
+    const K = 1073000000;
+    const V = 32190000000;
+
     const [programId, setProgramId] = useState(
         "B8ncJu5LdBgPeDqfpHirUhr9nunpjvjB8tACc9X3kc3L"
     );
@@ -59,7 +70,64 @@ export default function Home() {
     const [payInText, setPayInText] = useState("你将得到的Token数量:");
 
     // 默认买入
-    const [payInFormularImgPath, setPayInFormularImgPath] = useState("./formular_dy.png");
+    const [payInFormularImgPath, setPayInFormularImgPath] =
+        useState("./formular_dy.png");
+
+    // 公式
+    const [priceFormularShow, setPriceFormularShow] = useState("");
+    const [dydxFormularShow, setDyDxFormularShow] = useState("");
+
+    // 设置token信息
+    const [tokenInfoSymbol, setTokenInfoSymbol] = useState("-");
+    const [tokenInfoSupply, setTokenInfoSupply] = useState("-");
+    const [tokenInfoDecimals, setTokenInfoDecimals] = useState("-");
+    const [tokenInfoCanMint, setTokenInfoCanMint] = useState("-");
+
+    // loading
+    const [btnLoading, setBtnLoading] = useState(false);
+
+    async function getTokenInfo(
+        connection: Connection,
+        _mintAddress: String
+    ): Promise<TokenMintInfo> {
+        try {
+            // 创建 Mint 地址的 PublicKey 对象
+            const mintPublicKey = new PublicKey(_mintAddress);
+
+            // 获取 Mint 信息
+            const mintInfo = await getMint(connection, mintPublicKey);
+
+            // 尝试获取 Metaplex 元数据
+            let nft = await Metaplex.make(connection).nfts().findByMint({
+                mintAddress: mintPublicKey,
+                loadJsonMetadata: true,
+            });
+
+            console.log("nft: {}", nft);
+
+            // 获取 Token 账户的数据
+            const accountInfo = await connection.getAccountInfo(mintPublicKey);
+
+            if (!accountInfo) {
+                throw new Error("Token 账户不存在");
+            }
+
+            return {
+                symbol: nft.symbol,
+                decimals: mintInfo.decimals,
+                supply: Number(
+                    mintInfo.supply / BigInt(Math.pow(10, mintInfo.decimals))
+                ),
+                mintAuthority:
+                    mintInfo.mintAuthority === null
+                        ? "null"
+                        : mintInfo.mintAuthority.toBase58(),
+            };
+        } catch (error) {
+            console.error("获取 Token 信息时出错:", error);
+            throw error;
+        }
+    }
 
     function getBondingCurvePDA(tokenMint: String): [PublicKey, PublicKey] {
         let programIdAcc = new PublicKey(programId);
@@ -93,15 +161,13 @@ export default function Home() {
         let rawSolBalance = await connection.getBalance(bondingCurvePDA);
 
         // TODO: 这里要减去账户租金, 最保险的做法，应该读取PDA账户中的变量值
-        let accountSize = 0;
-        let rent = await connection.getMinimumBalanceForRentExemption(
-            accountSize
-        );
-        console.log("rent =", rent);
-
-        // TODO: 使用 bondignCurve地址存 SOL
-        console.log("rawSolBalance = ", rawSolBalance);
-        let trueSolBalance = rawSolBalance - rent;
+        // let accountSize = 0;
+        // let rent = await connection.getMinimumBalanceForRentExemption(
+        //     accountSize
+        // );
+        // console.log("rent =", rent);
+        // console.log("rawSolBalance = ", rawSolBalance);
+        let trueSolBalance = rawSolBalance;
         console.log("trueSolBalance = ", trueSolBalance);
 
         // 创建钱包地址的 PublicKey
@@ -165,10 +231,46 @@ export default function Home() {
         return dx;
     }
 
+    function clearText() {
+        setTokenInfoSymbol("-");
+        setTokenInfoSupply("-");
+        setTokenInfoDecimals("-");
+        setTokenInfoCanMint("-");
+
+        setBondingCurvePDA("");
+        setBondingCurveATA("");
+        setDyDxFormularShow("");
+        setPayInAmount("");
+        setMarketPrice("");
+        setPriceFormularShow("");
+        setCurSolAmountInPool("");
+        setCurTokenAmountInPool("");
+        setAfterTradingSolAmountInPool("");
+        setAfterTradingTokenAmountInPool("");
+
+        // 链上Bonding Curve  PDA账户余额
+        setCurBondingCurvePDASolAmount("");
+        setAfterTradingBondingCurveSolAmount("");
+        setCurBondingCurveTokenAmount("");
+        setafterTradingBondingCurveTokenAmount("");
+    }
+
     const handleCalculate = async () => {
+        clearText();
+        setBtnLoading(true);
         try {
-            let url = "https://api.devnet.solana.com";
+            // let url = "https://api.devnet.solana.com";
+            let url =
+                "https://devnet.helius-rpc.com/?api-key=b3fdafcd-cf2e-4096-8b89-bb0ea8b44c38";
             let connection = new Connection(url);
+
+            let tokenInfo = await getTokenInfo(connection, tokenMint);
+            setTokenInfoSymbol(tokenInfo.symbol.toString());
+            setTokenInfoSupply(tokenInfo.supply.toString());
+            setTokenInfoDecimals(tokenInfo.decimals.toString());
+            setTokenInfoCanMint(
+                tokenInfo.mintAuthority == "null" ? "否" : "是"
+            );
 
             let [bondingCurvePDARet, bondingCurveATARet] =
                 getBondingCurvePDA(tokenMint);
@@ -180,7 +282,6 @@ export default function Home() {
 
             // const [bondingCurvePdaRet, tokenMintRet] =
             //     await getBondingCurvePDAByTokenATA(connection, bondingCurveATA);
-
             // console.log("tokenMintRet = ", tokenMintRet.toBase58());
 
             setBondingCurvePDA(bondingCurvePDARet.toBase58());
@@ -210,11 +311,17 @@ export default function Home() {
                 dx = parseFloat(payOutAmount);
                 dy = calc_buy_for_dy(x, dx);
                 console.log("dy = ", dy);
+                setDyDxFormularShow(
+                    `Δy = (${V} * ${dx}) / ((30 + ${x}) * (30 + ${x} + ${dx}))`
+                );
 
                 // 计算最新成交价
                 mprice = calc_market_price(x + dx);
                 setPayInAmount(dy.toFixed(6).toString());
                 setMarketPrice(mprice.toFixed(10).toString());
+                setPriceFormularShow(
+                    `price = (30 + (${x} + ${dx} )) * (30 + (${x} + ${dx})) / ${V}`
+                );
 
                 // 虚拟池子余额
                 setCurSolAmountInPool(rsp.sol.toFixed(9).toString());
@@ -244,11 +351,17 @@ export default function Home() {
                 dy = parseFloat(payOutAmount);
                 dx = calc_sell_for_dx(y, dy);
                 console.log("dx = ", dx);
+                setDyDxFormularShow(
+                    `Δx = (${V} * ${dy}) / ((${K} - ${y}) * (${K} - ${y} + ${dy}))`
+                );
 
                 // 计算最新成交价
                 mprice = calc_market_price(x - dx);
                 setPayInAmount(dx.toFixed(9).toString()); // sol
                 setMarketPrice(mprice.toFixed(10).toString());
+                setPriceFormularShow(
+                    `prece = (30 + (${x} - ${dx} )) * (30 + (${x} - ${dx})) / ${V}`
+                );
 
                 // 虚拟池子余额
                 setCurSolAmountInPool(rsp.sol.toFixed(9).toString());
@@ -273,6 +386,7 @@ export default function Home() {
         } catch (error) {
             console.error("Error occured:", error);
         }
+        setBtnLoading(false);
     };
 
     const handleOptionChange = (event: any) => {
@@ -297,43 +411,38 @@ export default function Home() {
             select == "buy" ? "你将得到的Token数量:" : "你将得到的SOL数量:"
         );
 
-
-
         // 设置交易类型
         setIsBuyOperation(select == "buy" ? true : false);
 
         // 设置公式图片
-        setPayInFormularImgPath( select == "buy" ? "./formular_dy.png" : "./formular_dx.png" );
+        setPayInFormularImgPath(
+            select == "buy" ? "./formular_dy.png" : "./formular_dx.png"
+        );
     };
 
     return (
         <div>
-            <h2>FanslandAI-交易计算</h2>
-            <div>
-                <label>程序ID: </label>
-                <span>{programId}</span>
-            </div>
-            <br></br>
+            <h3>FanslandAI交易计算(程序ID: {programId} )</h3>
 
             <div style={{ display: "flex", flexDirection: "row" }}>
                 <label>交易类型: </label>
-                <label style={{ marginRight: "20px" }}>
+                <label style={{ marginRight: "20px", color: "#218457" }}>
                     <input
                         type="radio"
                         value="buy"
                         checked={selectedOption === "buy"}
                         onChange={handleOptionChange}
                     />
-                    买入Token
+                    <b>买入Token</b>
                 </label>
-                <label>
+                <label style={{ color: "#f80022" }}>
                     <input
                         type="radio"
                         value="sell"
                         checked={selectedOption === "sell"}
                         onChange={handleOptionChange}
                     />
-                    卖出Token
+                    <b>卖出Token</b>
                 </label>
             </div>
             <br></br>
@@ -363,7 +472,6 @@ export default function Home() {
                 />
             </div>
             <br></br>
-
             <div style={{ display: "flex", flexDirection: "row" }}>
                 <div style={{ marginRight: "20px" }}>
                     <label>{payOutText}</label>
@@ -375,23 +483,76 @@ export default function Home() {
                         placeholder="请输入数量......"
                     />
                 </div>
-                <button onClick={handleCalculate}>开始计算</button>
+                <button
+                    className="my-button"
+                    onClick={handleCalculate}
+                    disabled={btnLoading}
+                >
+                    <label style={{ color: "#0000ff", fontSize: "bold" }}>
+                        <b> {btnLoading ? "计算中..." : "开始计算"}</b>
+                    </label>{" "}
+                </button>
             </div>
 
-            <br></br>
             <hr></hr>
 
+            <div>
+                <label>
+                    Token详细信息:{" "}
+                    <a
+                        href={
+                            tokenMint === ""
+                                ? ""
+                                : `https://explorer.solana.com/address/${tokenMint}?cluster=devnet`
+                        }
+                    >
+                        {tokenMint === "" ? "" : `${tokenMint}`}
+                    </a>{" "}
+                </label>
+                <table className="my-table">
+                    <tbody>
+                        <tr>
+                            <td>Token名称</td>
+                            <td>总量</td>
+                            <td>精度</td>
+                            <td>能否可增发</td>
+                        </tr>
+                        <tr>
+                            <td>{tokenInfoSymbol}</td>
+                            <td>{tokenInfoSupply}</td>
+                            <td>{tokenInfoDecimals}</td>
+                            <td>{tokenInfoCanMint}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <hr></hr>
             <div>
                 <label>{payInText} </label>
                 <span>{payInAmount} </span>
                 <div>
-                    <label> 计算公式: </label>
-                    <br></br>
-                    <img src={payInFormularImgPath} />
+                    <label>
+                        {" "}
+                        计算公式: <code>{dydxFormularShow}</code>{" "}
+                    </label>
                 </div>
+                <img src={payInFormularImgPath} />
             </div>
 
-            <br></br>
+            <hr></hr>
+
+            <div>
+                <div>
+                    <label>交易后最新成交价(市场价): </label>
+                    <span>{marketPrice}</span>
+                    <label>
+                        计算公式: <code>{priceFormularShow} </code>
+                    </label>
+                </div>
+                <img src="./formular_price.png" />
+            </div>
+
             <hr></hr>
 
             <div>
@@ -413,7 +574,6 @@ export default function Home() {
                 <span>{afterTradingTokenAmountInPool}</span>
             </div>
 
-            <br></br>
             <hr></hr>
 
             <div>
@@ -452,20 +612,6 @@ export default function Home() {
                 <span>{afterTradingBondingCurveSolAmount}</span>
             </div>
 
-            <br></br>
-
-            <hr></hr>
-
-            <div>
-                <label>交易后最新成交价(市场价): </label>
-                <span>{marketPrice}</span>
-            </div>
-
-            <div>
-                <label>计算公式: </label>
-                <br></br>
-                <img src="./formular_price.png" />
-            </div>
             <hr></hr>
         </div>
     );
