@@ -66,7 +66,9 @@ export default function Home() {
     const [isBuyOperation, setIsBuyOperation] = useState(true); // true: buy, false: sell
 
     // 付出的Token文案
-    const [payOutText, setPayOutText] = useState("你想买入的数量(SOL数量):");
+    const [payOutText, setPayOutText] = useState(
+        "你想买入的数量(SOL数量,不含1%手续费):"
+    );
     const [payInText, setPayInText] = useState("你将得到的Token数量:");
 
     // 默认买入
@@ -85,6 +87,9 @@ export default function Home() {
 
     // loading
     const [btnLoading, setBtnLoading] = useState(false);
+
+    // 交易手续费
+    const [tradeFeeAmount, setTradeFeeAmount] = useState("");
 
     async function getTokenInfo(
         connection: Connection,
@@ -237,6 +242,8 @@ export default function Home() {
         setTokenInfoDecimals("-");
         setTokenInfoCanMint("-");
 
+        setTradeFeeAmount("");
+
         setBondingCurvePDA("");
         setBondingCurveATA("");
         setDyDxFormularShow("");
@@ -312,7 +319,9 @@ export default function Home() {
                 dy = calc_buy_for_dy(x, dx);
                 console.log("dy = ", dy);
                 setDyDxFormularShow(
-                    `Δy = (${V} * ${dx}) / ((30 + ${x}) * (30 + ${x} + ${dx}))`
+                    `Δy = ${dy
+                        .toFixed(6)
+                        .toString()} =(${V} * ${dx}) / ((30 + ${x}) * (30 + ${x} + ${dx}))`
                 );
 
                 // 计算最新成交价
@@ -320,7 +329,7 @@ export default function Home() {
                 setPayInAmount(dy.toFixed(6).toString());
                 setMarketPrice(mprice.toFixed(10).toString());
                 setPriceFormularShow(
-                    `price = (30 + (${x} + ${dx} )) * (30 + (${x} + ${dx})) / ${V}`
+                    `price = ${mprice.toFixed(10).toString()} = (30 + (${x} + ${dx} )) * (30 + (${x} + ${dx})) / ${V}`
                 );
 
                 // 虚拟池子余额
@@ -352,15 +361,22 @@ export default function Home() {
                 dx = calc_sell_for_dx(y, dy);
                 console.log("dx = ", dx);
                 setDyDxFormularShow(
-                    `Δx = (${V} * ${dy}) / ((${K} - ${y}) * (${K} - ${y} + ${dy}))`
+                    `Δx = ${dx
+                        .toFixed(9)
+                        .toString()} = (${V} * ${dy}) / ((${K} - ${y}) * (${K} - ${y} + ${dy}))`
                 );
+
+                // 计算手续费 1%
+                let fee = (dx * Math.pow(10, 9)) / (Math.pow(10, 9) * 100);
+                setTradeFeeAmount(fee.toFixed(9).toString());
 
                 // 计算最新成交价
                 mprice = calc_market_price(x - dx);
-                setPayInAmount(dx.toFixed(9).toString()); // sol
+                setPayInAmount((dx - fee).toFixed(9).toString()); // 到手的 SOL, 扣除1%手续费
+
                 setMarketPrice(mprice.toFixed(10).toString());
                 setPriceFormularShow(
-                    `prece = (30 + (${x} - ${dx} )) * (30 + (${x} - ${dx})) / ${V}`
+                    `price = ${mprice.toFixed(10).toString()} = (30 + (${x} - ${dx} )) * (30 + (${x} - ${dx})) / ${V}`
                 );
 
                 // 虚拟池子余额
@@ -404,11 +420,13 @@ export default function Home() {
         setSelectedOption(select);
         setPayOutText(
             select == "buy"
-                ? "你想买入的数量(SOL的数量):"
+                ? "你想买入的数量(SOL的数量,不含手续费):"
                 : "你想卖出的数量(Token的数量):"
         );
         setPayInText(
-            select == "buy" ? "你将得到的Token数量:" : "你将得到的SOL数量:"
+            select == "buy"
+                ? "你将得到的Token数量:"
+                : "你将得到的SOL数量(已扣除1%手续费):"
         );
 
         // 设置交易类型
@@ -530,7 +548,21 @@ export default function Home() {
             <hr></hr>
             <div>
                 <label>{payInText} </label>
-                <span>{payInAmount} </span>
+                <span>{payInAmount}</span>
+                <code>
+                    {isBuyOperation
+                        ? ""
+                        : payInAmount.length > 0
+                        ? ` (${payInAmount} = ${Number(
+                              Number(payInAmount) + Number(tradeFeeAmount)
+                          )
+                              .toFixed(9)
+                              .toString()} - ${Number(tradeFeeAmount)
+                              .toFixed(9)
+                              .toString()}`
+                        : ""}
+                    )
+                </code>
                 <div>
                     <label>
                         {" "}
@@ -546,9 +578,11 @@ export default function Home() {
                 <div>
                     <label>交易后最新成交价(市场价): </label>
                     <span>{marketPrice}</span>
-                    <label>
-                        计算公式: <code>{priceFormularShow} </code>
-                    </label>
+                    <div>
+                        <label>
+                            计算公式: <code>{priceFormularShow} </code>
+                        </label>
+                    </div>
                 </div>
                 <img src="./formular_price.png" />
             </div>
