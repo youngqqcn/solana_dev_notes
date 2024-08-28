@@ -74,3 +74,28 @@ body {
 .my-button:hover {
     background-color: #ccd5f1;
 }
+
+/**************/
+.my-input-container {
+    position: relative;
+    display: inline-block;
+    /* width: 500px; */
+    margin-right: 50px;
+}
+
+.my-input {
+    padding-right: 50px; /*为标签留出空间*/
+    width: 300px;
+    height: 30px;
+    right: 50px;
+    font-size: 15px; /* 可选：增加字体大小 */
+    padding: 2px; /* 可选：添加内边距 */
+}
+
+.currency-label {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-60%);
+    color: #888;
+}

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import * as web3 from "@solana/web3.js";
 import { Connection, PublicKey, SystemProgram } from "@solana/web3.js";
 import {
@@ -62,13 +62,11 @@ export default function Home() {
     const [marketPrice, setMarketPrice] = useState("");
 
     // buy/sell 操作
-    const [selectedOption, setSelectedOption] = useState("buy");
+    const [tradeOption, setSelectedOption] = useState("buy");
     const [isBuyOperation, setIsBuyOperation] = useState(true); // true: buy, false: sell
 
     // 付出的Token文案
-    const [payOutText, setPayOutText] = useState(
-        "你想买入的数量(SOL数量,不含1%手续费):"
-    );
+    const [payOutText, setPayOutText] = useState("你想买入的数量:");
     const [payInText, setPayInText] = useState("你将得到的Token数量:");
 
     // 默认买入
@@ -90,6 +88,21 @@ export default function Home() {
 
     // 交易手续费
     const [tradeFeeAmount, setTradeFeeAmount] = useState("");
+
+    // 按SOL 或 按Token
+    const [calcByOption, setCalcByOption] = useState("calcBySOL");
+    // const [calcBySymbolText, calcBySymbolText]
+
+    useEffect(() => {
+        if (tradeOption === "sell") {
+            setCalcByOption("calcByToken");
+        }
+
+        // 买入时，默认按照 SOL计算
+        if (tradeOption === "buy") {
+            setCalcByOption("calcBySOL");
+        }
+    }, [tradeOption]);
 
     async function getTokenInfo(
         connection: Connection,
@@ -172,7 +185,7 @@ export default function Home() {
         // );
         // console.log("rent =", rent);
         // console.log("rawSolBalance = ", rawSolBalance);
-        let trueSolBalance = rawSolBalance - 0.002*Math.pow( 10, 9);
+        let trueSolBalance = rawSolBalance - 0.002 * Math.pow(10, 9);
         console.log("trueSolBalance = ", trueSolBalance);
 
         // 创建钱包地址的 PublicKey
@@ -329,7 +342,9 @@ export default function Home() {
                 setPayInAmount(dy.toFixed(6).toString());
                 setMarketPrice(mprice.toFixed(10).toString());
                 setPriceFormularShow(
-                    `price = ${mprice.toFixed(10).toString()} = (30 + (${x} + ${dx} )) * (30 + (${x} + ${dx})) / ${V}`
+                    `price = ${mprice
+                        .toFixed(10)
+                        .toString()} = (30 + (${x} + ${dx} )) * (30 + (${x} + ${dx})) / ${V}`
                 );
 
                 // 虚拟池子余额
@@ -376,7 +391,9 @@ export default function Home() {
 
                 setMarketPrice(mprice.toFixed(10).toString());
                 setPriceFormularShow(
-                    `price = ${mprice.toFixed(10).toString()} = (30 + (${x} - ${dx} )) * (30 + (${x} - ${dx})) / ${V}`
+                    `price = ${mprice
+                        .toFixed(10)
+                        .toString()} = (30 + (${x} - ${dx} )) * (30 + (${x} - ${dx})) / ${V}`
                 );
 
                 // 虚拟池子余额
@@ -436,7 +453,17 @@ export default function Home() {
         setPayInFormularImgPath(
             select == "buy" ? "./formular_dy.png" : "./formular_dx.png"
         );
+
+        // 卖出， 只能按照token计算
+        setCalcByOption("calcByToken");
     };
+
+    function handleCalcByOption(event: any): void {
+        // throw new Error("Function not implemented.");
+        let select: String = event.target.value.toString();
+
+        setCalcByOption(select.toString());
+    }
 
     return (
         <div>
@@ -448,16 +475,17 @@ export default function Home() {
                     <input
                         type="radio"
                         value="buy"
-                        checked={selectedOption === "buy"}
+                        checked={tradeOption === "buy"}
                         onChange={handleOptionChange}
                     />
                     <b>买入Token</b>
                 </label>
+
                 <label style={{ color: "#f80022" }}>
                     <input
                         type="radio"
                         value="sell"
-                        checked={selectedOption === "sell"}
+                        checked={tradeOption === "sell"}
                         onChange={handleOptionChange}
                     />
                     <b>卖出Token</b>
@@ -465,6 +493,30 @@ export default function Home() {
             </div>
             <br></br>
 
+            <div>
+                <label>计算方式: </label>
+                <label style={{ marginRight: "20px" }}>
+                    <input
+                        type="radio"
+                        value="calcBySOL"
+                        checked={calcByOption == "calcBySOL"}
+                        onChange={handleCalcByOption}
+                        disabled={tradeOption === "sell"}
+                    />
+                    <span>按SOL数量计算</span>
+                </label>
+                <label>
+                    <input
+                        type="radio"
+                        value="calcByToken"
+                        checked={calcByOption == "calcByToken"}
+                        onChange={handleCalcByOption}
+                    />
+                    <span>按Token数量计算</span>
+                </label>
+            </div>
+
+            <br></br>
             <div>
                 <label>Token Mint地址 : </label>
                 <input
@@ -491,15 +543,23 @@ export default function Home() {
             </div>
             <br></br>
             <div style={{ display: "flex", flexDirection: "row" }}>
-                <div style={{ marginRight: "20px" }}>
+                <div className="my-input-container">
                     <label>{payOutText}</label>
                     <input
-                        className="large-input"
+                        className="my-input"
                         type="number"
                         value={payOutAmount}
                         onChange={(e) => setPayOutAmount(e.target.value)}
                         placeholder="请输入数量......"
                     />
+                    <span className="currency-label">
+                        {" "}
+                        {calcByOption === "calcBySOL"
+                            ? "SOL"
+                            : tokenInfoSymbol === "-"
+                            ? "Token"
+                            : tokenInfoSymbol}
+                    </span>
                 </div>
                 <button
                     className="my-button"
