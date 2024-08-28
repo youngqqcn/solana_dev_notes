@@ -66,12 +66,13 @@ export default function Home() {
     const [isBuyOperation, setIsBuyOperation] = useState(true); // true: buy, false: sell
 
     // 付出的Token文案
-    const [payOutText, setPayOutText] = useState("你想买入的数量:");
-    const [payInText, setPayInText] = useState("你将得到的Token数量:");
+    const [payOutText, setPayOutText] = useState("买入数量:");
+    const [payInText, setPayInText] = useState("将得到的Token数量:");
 
     // 默认买入
-    const [payInFormularImgPath, setPayInFormularImgPath] =
-        useState("./formular_dy.png");
+    const [payInFormularImgPath, setPayInFormularImgPath] = useState(
+        "./formular_buy_dy.png"
+    );
 
     // 公式
     const [priceFormularShow, setPriceFormularShow] = useState("");
@@ -97,12 +98,20 @@ export default function Home() {
         if (tradeOption === "sell") {
             setCalcByOption("calcByToken");
         }
-
-        // 买入时，默认按照 SOL计算
-        if (tradeOption === "buy") {
-            setCalcByOption("calcBySOL");
-        }
     }, [tradeOption]);
+
+    useEffect(() => {
+        // 更新图片基于交易类型和计算方式
+        if (tradeOption === "buy") {
+            if (calcByOption === "calcBySOL") {
+                setPayInFormularImgPath("./formular_buy_dy.png");
+            } else {
+                setPayInFormularImgPath("./formular_buy_dx.png");
+            }
+        } else {
+            setPayInFormularImgPath("./formular_sell_dx.png");
+        }
+    }, [tradeOption, calcByOption]);
 
     async function getTokenInfo(
         connection: Connection,
@@ -229,7 +238,16 @@ export default function Home() {
         return resp;
     }
 
+    function calc_buy_for_dx(x: number, dy: number) {
+        // 买入， 按照token计算
+        const k = 1073000000;
+        const v = 32190000000;
+        const dx = (dy * (30 + x) * (30 + x)) / (v - dy * (30 + x));
+        return dx;
+    }
+
     function calc_buy_for_dy(x: number, dx: number): number {
+        // 买入， 按照 SOL计算
         const k = 1073000000;
         const v = 32190000000;
         const dy = (v * dx) / ((30 + x) * (30 + x + dx));
@@ -325,47 +343,103 @@ export default function Home() {
             // 计算买入
             let [dx, dy, mprice] = [0, 0, 0];
             if (isBuyOperation) {
-                // 买入token
-                let x = rsp.sol;
-                let y = 1000000000 - rsp.token;
-                dx = parseFloat(payOutAmount);
-                dy = calc_buy_for_dy(x, dx);
-                console.log("dy = ", dy);
-                setDyDxFormularShow(
-                    `Δy = ${dy
-                        .toFixed(6)
-                        .toString()} =(${V} * ${dx}) / ((30 + ${x}) * (30 + ${x} + ${dx}))`
-                );
+                if (calcByOption == "calcBySOL") {
+                    console.log("买入，按照SOL计算");
+                    // 买入token, 按照 SOL计算
+                    let x = rsp.sol;
+                    let y = 1000000000 - rsp.token;
+                    dx = parseFloat(payOutAmount);
+                    dy = calc_buy_for_dy(x, dx);
+                    console.log("dy = ", dy);
+                    setDyDxFormularShow(
+                        `Δy = ${dy
+                            .toFixed(6)
+                            .toString()} =(${V} * ${dx}) / ((30 + ${x}) * (30 + ${x} + ${dx}))`
+                    );
 
-                // 计算最新成交价
-                mprice = calc_market_price(x + dx);
-                setPayInAmount(dy.toFixed(6).toString());
-                setMarketPrice(mprice.toFixed(10).toString());
-                setPriceFormularShow(
-                    `price = ${mprice
-                        .toFixed(10)
-                        .toString()} = (30 + (${x} + ${dx} )) * (30 + (${x} + ${dx})) / ${V}`
-                );
+                    // 计算最新成交价
+                    mprice = calc_market_price(x + dx);
+                    setPayInAmount(dy.toFixed(6).toString());
+                    setMarketPrice(mprice.toFixed(10).toString());
+                    setPriceFormularShow(
+                        `price = ${mprice
+                            .toFixed(10)
+                            .toString()} = (30 + (${x} + ${dx} )) * (30 + (${x} + ${dx})) / ${V}`
+                    );
 
-                // 虚拟池子余额
-                setCurSolAmountInPool(rsp.sol.toFixed(9).toString());
-                setCurTokenAmountInPool(y.toFixed(6).toString());
-                setAfterTradingSolAmountInPool(
-                    (rsp.sol + dx).toFixed(9).toString()
-                );
-                setAfterTradingTokenAmountInPool(
-                    (y + dy).toFixed(6).toString()
-                );
+                    // 虚拟池子余额
+                    setCurSolAmountInPool(rsp.sol.toFixed(9).toString());
+                    setCurTokenAmountInPool(y.toFixed(6).toString());
+                    setAfterTradingSolAmountInPool(
+                        (rsp.sol + dx).toFixed(9).toString()
+                    );
+                    setAfterTradingTokenAmountInPool(
+                        (y + dy).toFixed(6).toString()
+                    );
 
-                // 链上Bonding Curve  PDA账户余额
-                setCurBondingCurvePDASolAmount(rsp.sol.toFixed(9).toString());
-                setAfterTradingBondingCurveSolAmount(
-                    (rsp.sol + dx).toFixed(9).toString()
-                );
-                setCurBondingCurveTokenAmount(rsp.token.toFixed(6).toString());
-                setafterTradingBondingCurveTokenAmount(
-                    (rsp.token - dy).toFixed(6).toString()
-                );
+                    // 链上Bonding Curve  PDA账户余额
+                    setCurBondingCurvePDASolAmount(
+                        rsp.sol.toFixed(9).toString()
+                    );
+                    setAfterTradingBondingCurveSolAmount(
+                        (rsp.sol + dx).toFixed(9).toString()
+                    );
+                    setCurBondingCurveTokenAmount(
+                        rsp.token.toFixed(6).toString()
+                    );
+                    setafterTradingBondingCurveTokenAmount(
+                        (rsp.token - dy).toFixed(6).toString()
+                    );
+                } else {
+                    // 按照Token计算
+                    console.log("买入，按照token计算");
+
+                    let x = rsp.sol;
+                    let y = 1000000000 - rsp.token;
+                    dy = parseFloat(payOutAmount);
+                    dx = calc_buy_for_dx(x, dy);
+                    console.log("dx = ", dx);
+
+                    setDyDxFormularShow(
+                        `Δx = ${dx
+                            .toFixed(9)
+                            .toString()} =(${dy} * (30 + ${x})*(30 + ${x})) / (${V} - ${dy} * (30 + ${x}))`
+                    );
+
+                    // 计算最新成交价
+                    mprice = calc_market_price(x + dx);
+                    setPayInAmount(dx.toFixed(9).toString());
+                    setMarketPrice(mprice.toFixed(10).toString());
+                    setPriceFormularShow(
+                        `price = ${mprice
+                            .toFixed(10)
+                            .toString()} = (30 + (${x} + ${dx} )) * (30 + (${x} + ${dx})) / ${V}`
+                    );
+
+                    // 虚拟池子余额
+                    setCurSolAmountInPool(rsp.sol.toFixed(9).toString());
+                    setCurTokenAmountInPool(y.toFixed(6).toString());
+                    setAfterTradingSolAmountInPool(
+                        (rsp.sol + dx).toFixed(9).toString()
+                    );
+                    setAfterTradingTokenAmountInPool(
+                        (y + dy).toFixed(6).toString()
+                    );
+
+                    // 链上Bonding Curve  PDA账户余额
+                    setCurBondingCurvePDASolAmount(
+                        rsp.sol.toFixed(9).toString()
+                    );
+                    setAfterTradingBondingCurveSolAmount(
+                        (rsp.sol + dx).toFixed(9).toString()
+                    );
+                    setCurBondingCurveTokenAmount(
+                        rsp.token.toFixed(6).toString()
+                    );
+                    setafterTradingBondingCurveTokenAmount(
+                        (rsp.token - dy).toFixed(6).toString()
+                    );
+                }
             } else {
                 // 卖出token
                 let x = rsp.sol;
@@ -435,27 +509,10 @@ export default function Home() {
         })();
 
         setSelectedOption(select);
-        setPayOutText(
-            select == "buy"
-                ? "你想买入的数量(SOL的数量,不含手续费):"
-                : "你想卖出的数量(Token的数量):"
-        );
-        setPayInText(
-            select == "buy"
-                ? "你将得到的Token数量:"
-                : "你将得到的SOL数量(已扣除1%手续费):"
-        );
+        setPayOutText(select == "buy" ? "买入的数量:" : "卖出的数量:");
 
         // 设置交易类型
         setIsBuyOperation(select == "buy" ? true : false);
-
-        // 设置公式图片
-        setPayInFormularImgPath(
-            select == "buy" ? "./formular_dy.png" : "./formular_dx.png"
-        );
-
-        // 卖出， 只能按照token计算
-        setCalcByOption("calcByToken");
     };
 
     function handleCalcByOption(event: any): void {
@@ -463,6 +520,12 @@ export default function Home() {
         let select: String = event.target.value.toString();
 
         setCalcByOption(select.toString());
+
+        if (tradeOption == "buy" && select.toString() === "calcByToken") {
+            setPayInText("将付出的SOL数量(不含手续费): ");
+        } else if (tradeOption == "buy" && select.toString() === "calcBySOL") {
+            setPayInText("将得到的Token数量(不含手续费): ");
+        }
     }
 
     return (
@@ -503,7 +566,7 @@ export default function Home() {
                         onChange={handleCalcByOption}
                         disabled={tradeOption === "sell"}
                     />
-                    <span>按SOL数量计算</span>
+                    <span>按SOL数量</span>
                 </label>
                 <label>
                     <input
@@ -512,7 +575,7 @@ export default function Home() {
                         checked={calcByOption == "calcByToken"}
                         onChange={handleCalcByOption}
                     />
-                    <span>按Token数量计算</span>
+                    <span>按Token数量</span>
                 </label>
             </div>
 
