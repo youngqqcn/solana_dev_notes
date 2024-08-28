@@ -172,7 +172,7 @@ export default function Home() {
         // );
         // console.log("rent =", rent);
         // console.log("rawSolBalance = ", rawSolBalance);
-        let trueSolBalance = rawSolBalance;
+        let trueSolBalance = rawSolBalance - 0.002*Math.pow( 10, 9);
         console.log("trueSolBalance = ", trueSolBalance);
 
         // 创建钱包地址的 PublicKey
@@ -533,7 +533,7 @@ export default function Home() {
                             <td>Token名称</td>
                             <td>总量</td>
                             <td>精度</td>
-                            <td>能否可增发</td>
+                            <td>能否增发</td>
                         </tr>
                         <tr>
                             <td>{tokenInfoSymbol}</td>
@@ -561,7 +561,6 @@ export default function Home() {
                               .toFixed(9)
                               .toString()}`
                         : ""}
-                    )
                 </code>
                 <div>
                     <label>
