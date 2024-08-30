@@ -85,7 +85,7 @@ body {
 
 .my-input {
     padding-right: 50px; /*为标签留出空间*/
-    width: 300px;
+    width: 200px;
     height: 30px;
     right: 50px;
     font-size: 15px; /* 可选：增加字体大小 */

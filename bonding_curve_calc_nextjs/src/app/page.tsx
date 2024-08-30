@@ -28,7 +28,7 @@ export default function Home() {
     const V = 32190000000;
 
     const [programId, setProgramId] = useState(
-        "B8ncJu5LdBgPeDqfpHirUhr9nunpjvjB8tACc9X3kc3L"
+        "3RRdft47XcU6ziG3f5W99soJzaaChFDCMQzmemKpWfLB"
     );
 
     const [bondingCurveATA, setBondingCurveATA] = useState("");
@@ -354,7 +354,7 @@ export default function Home() {
                     setDyDxFormularShow(
                         `Δy = ${dy
                             .toFixed(6)
-                            .toString()} =(${V} * ${dx}) / ((30 + ${x}) * (30 + ${x} + ${dx}))`
+                            .toString()} = (${V} * ${dx}) / ((30 + ${x}) * (30 + ${x} + ${dx}))`
                     );
 
                     // 计算最新成交价
@@ -403,7 +403,7 @@ export default function Home() {
                     setDyDxFormularShow(
                         `Δx = ${dx
                             .toFixed(9)
-                            .toString()} =(${dy} * (30 + ${x})*(30 + ${x})) / (${V} - ${dy} * (30 + ${x}))`
+                            .toString()} = (${dy} * (30 + ${x})*(30 + ${x})) / (${V} - ${dy} * (30 + ${x}))`
                     );
 
                     // 计算最新成交价
@@ -513,6 +513,18 @@ export default function Home() {
 
         // 设置交易类型
         setIsBuyOperation(select == "buy" ? true : false);
+
+        if (select == "buy") {
+            if (calcByOption.toString() === "calcByToken") {
+                setPayInText("将付出的SOL数量(不含手续费): ");
+            } else if (calcByOption.toString() === "calcBySOL") {
+                setPayInText("将得到的Token数量(不含手续费): ");
+            }
+        } else {
+            if (select == "sell") {
+                setPayInText("将得到的SOL数量(已扣手续费): ");
+            }
+        }
     };
 
     function handleCalcByOption(event: any): void {
@@ -521,16 +533,47 @@ export default function Home() {
 
         setCalcByOption(select.toString());
 
-        if (tradeOption == "buy" && select.toString() === "calcByToken") {
-            setPayInText("将付出的SOL数量(不含手续费): ");
-        } else if (tradeOption == "buy" && select.toString() === "calcBySOL") {
-            setPayInText("将得到的Token数量(不含手续费): ");
+        if (tradeOption == "buy") {
+            if (select.toString() === "calcByToken") {
+                setPayInText("将付出的SOL数量(不含手续费): ");
+            } else if (select.toString() === "calcBySOL") {
+                setPayInText("将得到的Token数量(不含手续费): ");
+            }
+        } else {
+            if (select == "sell") {
+                setPayInText("将得到的SOL数量(未扣手续费): ");
+            }
         }
     }
 
     return (
         <div>
             <h3>FanslandAI交易计算(程序ID: {programId} )</h3>
+            <div>
+                <label>Token Mint地址 : </label>
+                <input
+                    className="url-input"
+                    type="text"
+                    value={tokenMint}
+                    onChange={(e) => {
+                        let input = e.target.value;
+                        if (
+                            input.startsWith("https") &&
+                            input.length >=
+                                44 +
+                                    "https://test-ai.fansland.xyz/trade/".length
+                        ) {
+                            let startIndex = input.indexOf("trade/") + 6;
+                            let endIndex = startIndex + 44;
+                            input = input.substring(startIndex, endIndex);
+                        }
+
+                        setTokenMint(input);
+                    }}
+                    placeholder="输入Token Mint地址"
+                />
+            </div>
+            <br></br>
 
             <div style={{ display: "flex", flexDirection: "row" }}>
                 <label>交易类型: </label>
@@ -580,31 +623,7 @@ export default function Home() {
             </div>
 
             <br></br>
-            <div>
-                <label>Token Mint地址 : </label>
-                <input
-                    className="url-input"
-                    type="text"
-                    value={tokenMint}
-                    onChange={(e) => {
-                        let input = e.target.value;
-                        if (
-                            input.startsWith("https") &&
-                            input.length >=
-                                44 +
-                                    "https://test-ai.fansland.xyz/trade/".length
-                        ) {
-                            let startIndex = input.indexOf("trade/") + 6;
-                            let endIndex = startIndex + 44;
-                            input = input.substring(startIndex, endIndex);
-                        }
 
-                        setTokenMint(input);
-                    }}
-                    placeholder="输入Token Mint地址"
-                />
-            </div>
-            <br></br>
             <div style={{ display: "flex", flexDirection: "row" }}>
                 <div className="my-input-container">
                     <label>{payOutText}</label>
