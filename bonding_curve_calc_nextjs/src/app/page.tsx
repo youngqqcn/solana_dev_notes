@@ -368,8 +368,59 @@ export default function Home() {
         console.log("feeBasisPoints: ", accInfo.feeBasisPoints.toString());
     }
 
+    async function fecthFanslandAI() {
+        const idlStr = `{"version":"0.1.0","name":"bonding_curve","instructions":[{"name":"calSol","accounts":[],"args":[{"name":"calType","type":"u8"},{"name":"reserveSol","type":"u64"},{"name":"tokenAmount","type":"u64"},{"name":"reserveToken","type":"u64"}]},{"name":"initialize","accounts":[{"name":"dexConfigurationAccount","isMut":true,"isSigner":false,"pda":{"seeds":[{"kind":"const","type":"string","value":"CurveConfiguration"}]}},{"name":"poolAuthority","isMut":true,"isSigner":false},{"name":"feeCollector","isMut":true,"isSigner":false},{"name":"admin","isMut":true,"isSigner":true},{"name":"rent","isMut":false,"isSigner":false},{"name":"systemProgram","isMut":false,"isSigner":false}],"args":[{"name":"buyFee","type":"u64"},{"name":"sellFee","type":"u64"},{"name":"lunchFee","type":"u64"}]},{"name":"updateFee","accounts":[{"name":"dexConfigurationAccount","isMut":false,"isSigner":false,"pda":{"seeds":[{"kind":"const","type":"string","value":"CurveConfiguration"}]}},{"name":"admin","isMut":true,"isSigner":true},{"name":"rent","isMut":false,"isSigner":false},{"name":"systemProgram","isMut":false,"isSigner":false}],"args":[{"name":"buyFee","type":"u64"},{"name":"sellFee","type":"u64"},{"name":"lunchFee","type":"u64"}]},{"name":"updatePoolAuthority","accounts":[{"name":"dexConfigurationAccount","isMut":true,"isSigner":false,"pda":{"seeds":[{"kind":"const","type":"string","value":"CurveConfiguration"}]}},{"name":"poolAuthority","isMut":true,"isSigner":false},{"name":"feeCollector","isMut":true,"isSigner":false},{"name":"admin","isMut":true,"isSigner":true},{"name":"rent","isMut":false,"isSigner":false},{"name":"systemProgram","isMut":false,"isSigner":false}],"args":[]},{"name":"updateFeeCollector","accounts":[{"name":"dexConfigurationAccount","isMut":true,"isSigner":false,"pda":{"seeds":[{"kind":"const","type":"string","value":"CurveConfiguration"}]}},{"name":"feeCollector","isMut":true,"isSigner":false},{"name":"admin","isMut":true,"isSigner":true},{"name":"rent","isMut":false,"isSigner":false},{"name":"systemProgram","isMut":false,"isSigner":false}],"args":[]},{"name":"createPool","accounts":[{"name":"pool","isMut":true,"isSigner":false,"pda":{"seeds":[{"kind":"const","type":"string","value":"liquidity_pool"},{"kind":"account","type":"publicKey","account":"Mint","path":"token_mint"}]}},{"name":"tokenMint","isMut":true,"isSigner":true},{"name":"poolTokenAccount","isMut":true,"isSigner":false},{"name":"poolSolVault","isMut":true,"isSigner":false,"pda":{"seeds":[{"kind":"const","type":"string","value":"liquidity_sol_vault"},{"kind":"account","type":"publicKey","account":"Mint","path":"token_mint"}]}},{"name":"poolAuthority","isMut":true,"isSigner":false},{"name":"feeCollector","isMut":true,"isSigner":false},{"name":"metadataAccount","isMut":true,"isSigner":false},{"name":"dexConfigurationAccount","isMut":false,"isSigner":false,"pda":{"seeds":[{"kind":"const","type":"string","value":"CurveConfiguration"}]}},{"name":"payer","isMut":true,"isSigner":true},{"name":"tokenProgram","isMut":false,"isSigner":false},{"name":"associatedTokenProgram","isMut":false,"isSigner":false},{"name":"tokenMetadataProgram","isMut":false,"isSigner":false},{"name":"rent","isMut":false,"isSigner":false},{"name":"systemProgram","isMut":false,"isSigner":false}],"args":[{"name":"tokenName","type":"string"},{"name":"tokenSymbol","type":"string"},{"name":"tokenUri","type":"string"}]},{"name":"buy","accounts":[{"name":"dexConfigurationAccount","isMut":true,"isSigner":false,"pda":{"seeds":[{"kind":"const","type":"string","value":"CurveConfiguration"}]}},{"name":"pool","isMut":true,"isSigner":false,"pda":{"seeds":[{"kind":"const","type":"string","value":"liquidity_pool"},{"kind":"account","type":"publicKey","account":"Mint","path":"token_mint"}]}},{"name":"tokenMint","isMut":true,"isSigner":false},{"name":"poolTokenAccount","isMut":true,"isSigner":false},{"name":"poolSolVault","isMut":true,"isSigner":false,"pda":{"seeds":[{"kind":"const","type":"string","value":"liquidity_sol_vault"},{"kind":"account","type":"publicKey","account":"Mint","path":"token_mint"}]}},{"name":"userTokenAccount","isMut":true,"isSigner":false},{"name":"feeCollector","isMut":true,"isSigner":false},{"name":"user","isMut":true,"isSigner":true},{"name":"rent","isMut":false,"isSigner":false},{"name":"systemProgram","isMut":false,"isSigner":false},{"name":"tokenProgram","isMut":false,"isSigner":false},{"name":"associatedTokenProgram","isMut":false,"isSigner":false}],"args":[{"name":"amount","type":"u64"},{"name":"expectedAmount","type":"u64"}]},{"name":"sell","accounts":[{"name":"dexConfigurationAccount","isMut":true,"isSigner":false,"pda":{"seeds":[{"kind":"const","type":"string","value":"CurveConfiguration"}]}},{"name":"pool","isMut":true,"isSigner":false,"pda":{"seeds":[{"kind":"const","type":"string","value":"liquidity_pool"},{"kind":"account","type":"publicKey","account":"Mint","path":"token_mint"}]}},{"name":"tokenMint","isMut":true,"isSigner":false},{"name":"poolTokenAccount","isMut":true,"isSigner":false},{"name":"poolSolVault","isMut":true,"isSigner":false,"pda":{"seeds":[{"kind":"const","type":"string","value":"liquidity_sol_vault"},{"kind":"account","type":"publicKey","account":"Mint","path":"token_mint"}]}},{"name":"userTokenAccount","isMut":true,"isSigner":false},{"name":"feeCollector","isMut":true,"isSigner":false},{"name":"user","isMut":true,"isSigner":true},{"name":"rent","isMut":false,"isSigner":false},{"name":"systemProgram","isMut":false,"isSigner":false},{"name":"tokenProgram","isMut":false,"isSigner":false},{"name":"associatedTokenProgram","isMut":false,"isSigner":false}],"args":[{"name":"amount","type":"u64"},{"name":"bump","type":"u8"},{"name":"expectedAmount","type":"u64"}]},{"name":"withdrawLiquidity","accounts":[{"name":"pool","isMut":true,"isSigner":false,"pda":{"seeds":[{"kind":"const","type":"string","value":"liquidity_pool"},{"kind":"account","type":"publicKey","account":"Mint","path":"token_mint"}]}},{"name":"tokenMint","isMut":true,"isSigner":false},{"name":"poolTokenAccount","isMut":true,"isSigner":false},{"name":"userTokenAccount","isMut":true,"isSigner":false},{"name":"poolSolVault","isMut":true,"isSigner":false,"pda":{"seeds":[{"kind":"const","type":"string","value":"liquidity_sol_vault"},{"kind":"account","type":"publicKey","account":"Mint","path":"token_mint"}]}},{"name":"user","isMut":true,"isSigner":true},{"name":"rent","isMut":false,"isSigner":false},{"name":"systemProgram","isMut":false,"isSigner":false},{"name":"tokenProgram","isMut":false,"isSigner":false},{"name":"associatedTokenProgram","isMut":false,"isSigner":false}],"args":[{"name":"bump","type":"u8"}]}],"accounts":[{"name":"CurveConfiguration","type":{"kind":"struct","fields":[{"name":"buyFee","type":"u64"},{"name":"sellFee","type":"u64"},{"name":"lunchFee","type":"u64"},{"name":"poolAuthority","type":"publicKey"},{"name":"feeCollector","type":"publicKey"},{"name":"updateAuthority","type":"publicKey"}]}},{"name":"LiquidityPool","type":{"kind":"struct","fields":[{"name":"poolAuthority","type":"publicKey"},{"name":"creator","type":"publicKey"},{"name":"token","type":"publicKey"},{"name":"totalSupply","type":"u64"},{"name":"reserveToken","type":"u64"},{"name":"reserveSol","type":"u64"},{"name":"bump","type":"u8"},{"name":"closeStatus","type":"u8"},{"name":"relReserveToken","type":"u64"},{"name":"relReserveSol","type":"u64"}]}}],"errors":[{"code":6000,"name":"DuplicateTokenNotAllowed","msg":"Duplicate tokens are not allowed"},{"code":6001,"name":"FailedToAllocateShares","msg":"Failed to allocate shares"},{"code":6002,"name":"FailedToDeallocateShares","msg":"Failed to deallocate shares"},{"code":6003,"name":"InsufficientShares","msg":"Insufficient shares"},{"code":6004,"name":"InsufficientFunds","msg":"Insufficient funds to swap"},{"code":6005,"name":"InvalidAmount","msg":"Invalid amount to swap"},{"code":6006,"name":"InvalidFee","msg":"Invalid fee"},{"code":6007,"name":"FailedToAddLiquidity","msg":"Failed to add liquidity"},{"code":6008,"name":"FailedToRemoveLiquidity","msg":"Failed to remove liquidity"},{"code":6009,"name":"NotEnoughToRemove","msg":"Sold token is not enough to remove pool"},{"code":6010,"name":"NotCreator","msg":"Not a pool creator"},{"code":6011,"name":"OverflowOrUnderflowOccurred","msg":"Overflow or underflow occured"},{"code":6012,"name":"TokenAmountToSellTooBig","msg":"Token amount is too big to sell"},{"code":6013,"name":"NotEnoughSolInVault","msg":"SOL is not enough in vault"},{"code":6014,"name":"NotEnoughTokenInVault","msg":"Token is not enough in vault"},{"code":6015,"name":"NegativeNumber","msg":"Amount is negative"},{"code":6016,"name":"NotPower","msg":"No power"},{"code":6017,"name":"ToDex","msg":"Please to dex"},{"code":6018,"name":"AccountErr","msg":"account error"},{"code":6019,"name":"WithinSlippage","msg":"The price is not appropriate"},{"code":6020,"name":"TradeOnRay","msg":"The bonding curve has completed and liquidity migrated to raydium"}]}`;
+        const idl = JSON.parse(idlStr);
+
+        const provider = new AnchorProvider(
+            new Connection(
+                "https://devnet.helius-rpc.com/?api-key=b3fdafcd-cf2e-4096-8b89-bb0ea8b44c38" // devnet
+                // "https://mainnet.helius-rpc.com/?api-key=b3fdafcd-cf2e-4096-8b89-bb0ea8b44c38" // 主网
+            ),
+            new CustomWallet(), // 实际可使用钱包适配器, 或者 phantom钱包
+            AnchorProvider.defaultOptions()
+        );
+        anchor.setProvider(provider);
+
+        let fanslandProgramId = new web3.PublicKey(
+            "6pFVNRitagzVvP3Eh46bUtEyTGYg3bRJrfRrqLryz6kn"
+        );
+
+        let [liquidityPoolPDA] = web3.PublicKey.findProgramAddressSync(
+            [
+                Buffer.from("liquidity_pool"),
+                new web3.PublicKey(
+                    "EqvhmDM6HxgPBsa4YDA65uPy5S8PGH1UHk3o3spSCEmE" // token mint
+                ).toBytes(),
+            ],
+            fanslandProgramId
+        );
+        console.log("===liquidity_pool pda: ", liquidityPoolPDA.toBase58());
+
+        const program = new anchor.Program(
+            idl as anchor.Idl,
+            fanslandProgramId,
+            provider
+        );
+
+        console.log(program.account);
+        let accInfo = await program.account.liquidityPool.fetch(
+            liquidityPoolPDA
+        );
+        console.log(accInfo);
+        console.log(JSON.stringify(accInfo));
+
+        console.log("totalSupply: ", accInfo.totalSupply.toString());
+        console.log("reserveToken: ", accInfo.reserveToken); // BN 类型
+        console.log("reserveToken: ", accInfo.reserveToken.toString());
+        console.log("reserveSol: ", accInfo.reserveSol.toString());
+        console.log("relReserveToken: ", accInfo.relReserveToken.toString());
+        console.log("relReserveSol: ", accInfo.relReserveSol.toString());
+    }
+
     const handleCalculate = async () => {
-        await fetchPumpFunc();
+        // await fetchPumpFunc();
+        await fecthFanslandAI();
 
         clearText();
         setBtnLoading(true);
