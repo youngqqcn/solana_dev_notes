@@ -408,8 +408,6 @@ export default function Home() {
             liquidityPoolPDA
         );
         console.log(accInfo);
-        console.log(JSON.stringify(accInfo));
-
         console.log("totalSupply: ", accInfo.totalSupply.toString());
         console.log("reserveToken: ", accInfo.reserveToken); // BN 类型
         console.log("reserveToken: ", accInfo.reserveToken.toString());
