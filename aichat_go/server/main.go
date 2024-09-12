@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/youngqqcn/fansland_ai/openai_go/server/handler"
+	"github.com/youngqqcn/fansland_ai/aichat_go/server/handler"
 )
 
 func main() {
