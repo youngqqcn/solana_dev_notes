@@ -71,7 +71,7 @@ export default function Home() {
     // 虚拟池子， 注意与实际账户余额区分
     // const [curSolAmountInPool, setCurSolAmountInPool] = useState("");
     // const [afterTradingSolAmountInPool, setAfterTradingSolAmountInPool] =
-        useState("");
+    useState("");
     const [curTokenAmountInPool, setCurTokenAmountInPool] = useState("");
     // const [afterTradingTokenAmountInPool, setAfterTradingTokenAmountInPool] =
     //     useState("");
@@ -275,7 +275,7 @@ export default function Home() {
         dy: BN,
         virtualSolReserves: BN,
         virtualTokenReserves: BN
-    ) {
+    ): BN {
         // 买入， 按照token计算
         let dx = dy
             .mul(virtualSolReserves)
@@ -288,7 +288,7 @@ export default function Home() {
         dx: BN,
         virtualSolReserves: BN,
         virtualTokenReserves: BN
-    ): number {
+    ): BN {
         // 买入， 按照 SOL计算
         let a = virtualSolReserves.mul(virtualTokenReserves);
         let b = virtualSolReserves.add(dx);
@@ -307,10 +307,12 @@ export default function Home() {
         return market_price;
     }
 
-    function calc_sell_for_dx(y: number, dy: number): number {
-        const k = 1073000000;
-        const v = 32190000000;
-        const dx = (v * dy) / ((k - y) * (k - y + dy));
+    function calc_sell_for_dx(
+        dy: BN,
+        virtualSolReserves: BN,
+        virtualTokenReserves: BN
+    ): BN {
+        const dx = dy.mul(virtualSolReserves).div(virtualTokenReserves.add(dy));
         return dx;
     }
 
@@ -448,12 +450,12 @@ export default function Home() {
             // console.log(rsp);
 
             // 计算买入
-            let [dx, dy, mprice] = [0, 0, 0];
+            // let [dx, dy, mprice] = [0, 0, 0];
             if (isBuyOperation) {
                 if (calcByOption == "calcBySOL") {
                     console.log("买入，按照SOL计算");
                     // 买入token, 按照 SOL计算
-                    dy = calc_buy_for_dy(
+                    let dy = calc_buy_for_dy(
                         new BN(parseFloat(payOutAmount) * 1000000000),
                         bondingCurveData.virtualSolReserves,
                         bondingCurveData.virtualTokenReserves
@@ -462,7 +464,7 @@ export default function Home() {
                     // setDyDxFormularShow(`xx`);
 
                     // 计算最新成交价
-                    mprice = calc_market_price(
+                    let mprice = calc_market_price(
                         new BN(parseFloat(payOutAmount) * 1000000000).add(
                             bondingCurveData.virtualSolReserves
                         ),
@@ -474,68 +476,49 @@ export default function Home() {
                     // 按照Token计算
                     console.log("买入，按照token计算");
 
-                    dx = calc_buy_for_dx(
+                    let dx = calc_buy_for_dx(
                         new BN(parseFloat(payOutAmount) * 1000000),
                         bondingCurveData.virtualSolReserves,
                         bondingCurveData.virtualTokenReserves
                     );
                     console.log("dx = ", dx);
 
-                    // setDyDxFormularShow(`xxx`);
-
                     // 计算最新成交价
-                    mprice = calc_market_price(
-                        new BN(parseFloat(payOutAmount) * 1000000).add(
-                            bondingCurveData.virtualSolReserves
-                        ),
-                        bondingCurveData.virtualTokenReserves.sub(dy)
+                    console.log(
+                        "virtualTokenReserves: ",
+                        bondingCurveData.virtualTokenReserves.toString()
                     );
-                    setPayInAmount(dx.toFixed(9).toString());
+                    let mprice = calc_market_price(
+                        dx.add(bondingCurveData.virtualSolReserves),
+                        bondingCurveData.virtualTokenReserves.sub(
+                            new BN(parseFloat(payOutAmount) * 1000000)
+                        )
+                    );
+                    console.log("dx = ", dx.toString());
+                    setPayInAmount(dx.toString());
                     setMarketPrice(mprice.toFixed(10).toString());
                     // setPriceFormularShow(`xxx`);
                 }
             } else {
                 // 卖出token
-                // let x = rsp.sol;
-                // // 注意: 总量减去现有的，才是真正卖出的，真正卖出的才是 虚拟池子中的 token数量
-                // let y = 1000000000 - rsp.token;
-                // console.log("y = ", y);
-                // dy = parseFloat(payOutAmount);
-                // dx = calc_sell_for_dx(y, dy);
-                // console.log("dx = ", dx);
-                // setDyDxFormularShow(
-                //     `Δx = ${dx
-                //         .toFixed(9)
-                //         .toString()} = (${V} * ${dy}) / ((${K} - ${y}) * (${K} - ${y} + ${dy}))`
-                // );
-                // // 计算手续费 1%
-                // let fee = (dx * Math.pow(10, 9)) / (Math.pow(10, 9) * 100);
-                // setTradeFeeAmount(fee.toFixed(9).toString());
-                // // 计算最新成交价
-                // mprice = calc_market_price(x - dx);
-                // setPayInAmount((dx - fee).toFixed(9).toString()); // 到手的 SOL, 扣除1%手续费
-                // setMarketPrice(mprice.toFixed(10).toString());
-                // setPriceFormularShow(
-                //     `xxx`
-                // );
-                // // 虚拟池子余额
-                // setCurSolAmountInPool(rsp.sol.toFixed(9).toString());
-                // setCurTokenAmountInPool(rsp.token.toFixed(6).toString());
-                // setAfterTradingSolAmountInPool(
-                //     (rsp.sol - dx).toFixed(9).toString()
-                // );
-                // setAfterTradingTokenAmountInPool(
-                //     (y - dy).toFixed(6).toString()
-                // );
-                // // 链上Bonding Curve  PDA账户余额
-                // setCurBondingCurvePDASolAmount(rsp.sol.toFixed(9).toString());
-                // setAfterTradingBondingCurveSolAmount(
-                //     (rsp.sol - dx).toFixed(9).toString()
-                // );
-                // setCurBondingCurveTokenAmount(rsp.token.toFixed(6).toString());
-                // setafterTradingBondingCurveTokenAmount(
-                //     (rsp.token + dy).toFixed(6).toString()
-                // );
+                let dy = new BN(parseFloat(payOutAmount) * 1000000);
+                let dx = calc_sell_for_dx(
+                    dy,
+                    bondingCurveData.virtualSolReserves,
+                    bondingCurveData.virtualTokenReserves
+                );
+                console.log("dx = ", dx.toString());
+
+                // 计算手续费 1%
+                let fee = dx.mul(100).div(10000);
+                setTradeFeeAmount(fee.toString());
+                // 计算最新成交价
+                let mprice = calc_market_price(
+                    bondingCurveData.virtualSolReserves,
+                    bondingCurveData.virtualTokenReserves
+                );
+                setPayInAmount( dx.sub(fee).toString() ); // 到手的 SOL, 扣除1%手续费
+                setMarketPrice(mprice.toFixed(10).toString());
             }
         } catch (error) {
             console.error("Error occured:", error);
